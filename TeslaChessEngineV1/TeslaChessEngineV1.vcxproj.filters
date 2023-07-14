@@ -18,6 +18,9 @@
     <ClCompile Include="TeslaChessEngineV1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Chessboard.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChessBoard.h">
