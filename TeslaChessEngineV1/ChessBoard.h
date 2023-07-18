@@ -1,38 +1,31 @@
 #pragma once
+#include "Move.h"
 #include <vector>
 #include <string>
+#include <unordered_map>
 
 class Chessboard {
     
 public:
     Chessboard();
     char board[64];
-    char moveSide;
+    bool moveSide;
     char castlingAbility[4];
     int halfMoveClock;
     int fullMoveClock;
-    std::string enPassantTarget;
-    std::string kingIndex;
-    unsigned long long Bitmaps[14];
-    /*
-    Index 0 = WhitePawnMap
-    Index 1 = WhiteKnightMap
-    Index 2 = WhiteBishopMap
-    Index 3 = WhiteRookMap
-    Index 4 = WhiteQueenMap
-    Index 5 = WhiteKingMap
-    Index 6 = WhiteFullMap
+    unsigned long long enPassantTarget;
+    std::vector<Move> LegalMoves; 
+    unsigned long long Bitmaps[15];
+    std::vector<std::vector<short>> pieceLocations;
 
-    Index 7 = BlackPawnMap
-    Index 8 = BlackKnightMap
-    Index 9 = BlackBishopMap
-    Index 10 = BlackRookMap
-    Index 11 = BlackQueenMap
-    Index 12 = BlackKingMap
-    Index 13 = BlackFullMap
-    */
+    
 
+    void FindLegalMoves();
+    void FindPawnMoves();
+    void FindKnightMoves();
     void LoadPosition(std::string FEN);
+    void MakeMove(Move move);
+    std::string BitmapsToMove(unsigned long long StartSquare, unsigned long long TargetSquare);
 };
 
 /*
