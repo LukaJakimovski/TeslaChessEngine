@@ -23,6 +23,11 @@ public:
     void FindLegalMoves();
     void FindPawnMoves();
     void FindKnightMoves();
+    void FindBishopMoves();
+    void FindRookMoves();
+    void FindQueenMoves();
+    void FindKingMoves();
+
     void LoadPosition(std::string FEN);
     void MakeMove(Move move);
     std::string BitmapsToMove(unsigned long long StartSquare, unsigned long long TargetSquare);

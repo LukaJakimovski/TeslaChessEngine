@@ -207,6 +207,10 @@ void Chessboard::LoadPosition(std::string FEN) {
     }
 }
 
+
+
+
+
 void Chessboard::FindLegalMoves() {
 
 }
@@ -348,10 +352,6 @@ void Chessboard::FindPawnMoves() {
     
 }
 void Chessboard::FindKnightMoves() {
-    //Row 1 on board shift left 8 to go over 1 row ex. row << 4 = row 5
-    unsigned long long row = 0b0000000000000000000000000000000000000000000000000000000011111111;
-    //Column a on board shift left 1 to go up 1 column ex. column << 4 = column e
-    unsigned long long column = 0b0000000100000001000000010000000100000001000000010000000100000001;
     unsigned long long startSquare = 1UL;
     unsigned long long targetSquare = 1UL;
     short captureType = -1;
@@ -759,9 +759,1851 @@ void Chessboard::FindKnightMoves() {
     }
 }
 
+void Chessboard::FindBishopMoves() {
+    unsigned long long startSquare = 1ULL;
+    unsigned long long targetSquare = 1ULL;
+    unsigned long long tempStart = 1ULL;
+    short currentIndex = 0;
+    short captureType = -1;
+    short capturedIndex = -1;
+    short movedIndex = 0;
+    bool lastSquare = 0;
 
 
+    if (moveSide == 0)
+    {
+        for (int i = 0; i < pieceLocations[Bitmap::WhiteBishop].size(); i++)
+        {
+            startSquare = 1ULL << pieceLocations[Bitmap::WhiteBishop][i];
 
+            //North West
+            targetSquare = startSquare << 7;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::WhiteBishop][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex < Row::Row8) && ((tempStart & Column::ColumnA) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteBishop, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare << 7;
+                currentIndex += 7;
+            }
+            //North East
+            targetSquare = startSquare << 9;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::WhiteBishop][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex < Row::Row8) && ((tempStart & Column::ColumnH) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteBishop, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare << 9;
+                currentIndex += 9;
+            }
+            //South West
+            targetSquare = startSquare >> 9;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::WhiteBishop][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex >= Row::Row2) && ((tempStart & Column::ColumnA) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteBishop, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare >> 9;
+                currentIndex -= 9;
+            }
+            //South East
+            targetSquare = startSquare >> 7;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::WhiteBishop][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex >= Row::Row2) && ((tempStart & Column::ColumnH) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteBishop, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare >> 7;
+                currentIndex -= 7;
+            }
+            
+        }
+        
+    }
+    if (moveSide == 1)
+    {
+        for (int i = 0; i < pieceLocations[Bitmap::BlackBishop].size(); i++)
+        {
+            startSquare = 1ULL << pieceLocations[Bitmap::BlackBishop][i];
+
+            //North West
+            targetSquare = startSquare << 7;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::BlackBishop][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex < Row::Row8) && ((tempStart & Column::ColumnA) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackBishop, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare << 7;
+                currentIndex += 7;
+            }
+            //North East
+            targetSquare = startSquare << 9;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::BlackBishop][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex < Row::Row8) && ((tempStart & Column::ColumnH) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackBishop, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare << 9;
+                currentIndex += 9;
+            }
+            //South West
+            targetSquare = startSquare >> 9;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::BlackBishop][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex >= Row::Row2) && ((tempStart & Column::ColumnA) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackBishop, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare >> 9;
+                currentIndex -= 9;
+            }
+            //South East
+            targetSquare = startSquare >> 7;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::BlackBishop][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex >= Row::Row2) && ((tempStart & Column::ColumnH) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackBishop, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare >> 7;
+                currentIndex -= 7;
+            }
+
+        }
+    }
+    
+}
+
+void Chessboard::FindRookMoves() {
+    unsigned long long startSquare = 1ULL;
+    unsigned long long targetSquare = 1ULL;
+    unsigned long long tempStart = 1ULL;
+    short currentIndex = 0;
+    short captureType = -1;
+    short capturedIndex = -1;
+    short movedIndex = 0;
+    bool lastSquare = 0;
+
+    
+    if (moveSide == 0)
+    {
+        for (int i = 0; i < pieceLocations[Bitmap::WhiteRook].size(); i++)
+        {
+            startSquare = 1ULL << pieceLocations[Bitmap::WhiteRook][i];
+
+            //North
+            targetSquare = startSquare << 8;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::WhiteRook][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex < Row::Row8) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteRook, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare << 8;
+                currentIndex += 8;
+            }
+            //East
+            targetSquare = startSquare << 1;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::WhiteRook][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if (((tempStart & Column::ColumnH) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteRook, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare << 1;
+                currentIndex += 1;
+            }
+            //South
+            targetSquare = startSquare >> 8;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::WhiteRook][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex >= Row::Row2) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteRook, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare >> 8;
+                currentIndex -= 8;
+            }
+            //West
+            targetSquare = startSquare >> 1;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::WhiteRook][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if (((tempStart & Column::ColumnA) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteRook, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare >> 1;
+                currentIndex -= 1;
+            }
+        }
+    }
+    if (moveSide == 1)
+    {
+        for (int i = 0; i < pieceLocations[Bitmap::BlackRook].size(); i++)
+        {
+            startSquare = 1ULL << pieceLocations[Bitmap::BlackRook][i];
+
+            //North
+            targetSquare = startSquare << 8;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::BlackRook][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex < Row::Row8) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackRook, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare << 8;
+                currentIndex += 8;
+            }
+            //East
+            targetSquare = startSquare << 1;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::BlackRook][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if (((tempStart & Column::ColumnH) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackRook, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare << 1;
+                currentIndex += 1;
+            }
+            //South
+            targetSquare = startSquare >> 8;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::BlackRook][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex >= Row::Row2) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackRook, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare >> 8;
+                currentIndex -= 8;
+            }
+            //West
+            targetSquare = startSquare >> 1;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::BlackRook][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if (((tempStart & Column::ColumnA) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackRook, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare >> 1;
+                currentIndex -= 1;
+            }
+        }
+    }
+}
+
+void Chessboard::FindQueenMoves(){
+    unsigned long long startSquare = 1ULL;
+    unsigned long long targetSquare = 1ULL;
+    unsigned long long tempStart = 1ULL;
+    short currentIndex = 0;
+    short captureType = -1;
+    short capturedIndex = -1;
+    short movedIndex = 0;
+    bool lastSquare = 0;
+
+
+    if (moveSide == 0)
+    {
+        for (int i = 0; i < pieceLocations[Bitmap::WhiteQueen].size(); i++)
+        {
+            startSquare = 1ULL << pieceLocations[Bitmap::WhiteQueen][i];
+
+            //North West
+            targetSquare = startSquare << 7;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::WhiteQueen][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex < Row::Row8) && ((tempStart & Column::ColumnA) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteQueen, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare << 7;
+                currentIndex += 7;
+            }
+            //North East
+            targetSquare = startSquare << 9;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::WhiteQueen][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex < Row::Row8) && ((tempStart & Column::ColumnH) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteQueen, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare << 9;
+                currentIndex += 9;
+            }
+            //South West
+            targetSquare = startSquare >> 9;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::WhiteQueen][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex >= Row::Row2) && ((tempStart & Column::ColumnA) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteQueen, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare >> 9;
+                currentIndex -= 9;
+            }
+            //South East
+            targetSquare = startSquare >> 7;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::WhiteQueen][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex >= Row::Row2) && ((tempStart & Column::ColumnH) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteQueen, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare >> 7;
+                currentIndex -= 7;
+            }
+
+            //North
+            targetSquare = startSquare << 8;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::WhiteQueen][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex < Row::Row8) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteQueen, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare << 8;
+                currentIndex += 8;
+            }
+            //East
+            targetSquare = startSquare << 1;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::WhiteQueen][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if (((tempStart & Column::ColumnH) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteQueen, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare << 1;
+                currentIndex += 1;
+            }
+            //South
+            targetSquare = startSquare >> 8;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::WhiteQueen][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex >= Row::Row2) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteQueen, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare >> 8;
+                currentIndex -= 8;
+            }
+            //West
+            targetSquare = startSquare >> 1;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::WhiteQueen][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if (((tempStart & Column::ColumnA) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteQueen, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare >> 1;
+                currentIndex -= 1;
+            }
+        }
+    }
+    if (moveSide == 1)
+    {
+        for (int i = 0; i < pieceLocations[Bitmap::BlackQueen].size(); i++)
+        {
+            startSquare = 1ULL << pieceLocations[Bitmap::BlackQueen][i];
+
+            //North West
+            targetSquare = startSquare << 7;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::BlackQueen][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex < Row::Row8) && ((tempStart & Column::ColumnA) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackQueen, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare << 7;
+                currentIndex += 7;
+            }
+            //North East
+            targetSquare = startSquare << 9;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::BlackQueen][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex < Row::Row8) && ((tempStart & Column::ColumnH) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackQueen, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare << 9;
+                currentIndex += 9;
+            }
+            //South West
+            targetSquare = startSquare >> 9;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::BlackQueen][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex >= Row::Row2) && ((tempStart & Column::ColumnA) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackQueen, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare >> 9;
+                currentIndex -= 9;
+            }
+            //South East
+            targetSquare = startSquare >> 7;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::BlackQueen][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex >= Row::Row2) && ((tempStart & Column::ColumnH) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackQueen, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare >> 7;
+                currentIndex -= 7;
+            }
+
+            //North
+            targetSquare = startSquare << 8;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::BlackQueen][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex < Row::Row8) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackQueen, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare << 8;
+                currentIndex += 8;
+            }
+            //East
+            targetSquare = startSquare << 1;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::BlackQueen][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if (((tempStart & Column::ColumnH) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackQueen, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare << 1;
+                currentIndex += 1;
+            }
+            //South
+            targetSquare = startSquare >> 8;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::BlackQueen][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if ((currentIndex >= Row::Row2) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackQueen, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare >> 8;
+                currentIndex -= 8;
+            }
+            //West
+            targetSquare = startSquare >> 1;
+            tempStart = startSquare;
+            currentIndex = pieceLocations[Bitmap::BlackQueen][i];
+            lastSquare = 0;
+            while (true)
+            {
+                if (((tempStart & Column::ColumnA) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+                {
+                    if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                    {
+                        for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                        {
+                            if (targetSquare & Bitmaps[i])
+                            {
+                                captureType = i;
+                                for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                                {
+                                    if (pieceLocations[captureType][j])
+                                    {
+                                        capturedIndex = j;
+                                    }
+                                }
+                                lastSquare = 1;
+                                break;
+                            }
+                        }
+                    }
+                    LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackQueen, captureType, capturedIndex, movedIndex });
+                }
+                else
+                {
+                    break;
+                }
+                if (lastSquare == 1)
+                {
+                    break;
+                }
+                tempStart = targetSquare;
+                targetSquare = targetSquare >> 1;
+                currentIndex -= 1;
+            }
+        }
+    }
+}
+
+void Chessboard::FindKingMoves() {
+    unsigned long long startSquare = 1ULL;
+    unsigned long long targetSquare = 1ULL;
+    short captureType = -1;
+    short capturedIndex = -1;
+    short movedIndex = 0;
+    if (moveSide == 0)
+    {
+        for (int i = 0; i < pieceLocations[Bitmap::WhiteKing].size(); i++)
+        {
+            startSquare = 1ULL << pieceLocations[Bitmap::WhiteKing][i];
+
+            //North West
+            targetSquare = startSquare << 7;
+            if ((pieceLocations[Bitmap::WhiteKing][i] < Row::Row8) && ((startSquare & Column::ColumnA) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+            {
+                if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                {
+                    for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                    {
+                        if (targetSquare & Bitmaps[i])
+                        {
+                            captureType = i;
+                            for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                            {
+                                if (pieceLocations[captureType][j])
+                                {
+                                    capturedIndex = j;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteKing, captureType, capturedIndex, movedIndex });
+            }
+            //North
+            targetSquare = startSquare << 8;
+            if ((pieceLocations[Bitmap::WhiteKing][i] < Row::Row8) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+            {
+                if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                {
+                    for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                    {
+                        if (targetSquare & Bitmaps[i])
+                        {
+                            captureType = i;
+                            for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                            {
+                                if (pieceLocations[captureType][j])
+                                {
+                                    capturedIndex = j;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteKing, captureType, capturedIndex, movedIndex });
+            }
+            //North East
+            targetSquare = startSquare << 9;
+            if ((pieceLocations[Bitmap::WhiteKing][i] < Row::Row8) && ((startSquare & Column::ColumnH) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+            {
+                if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                {
+                    for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                    {
+                        if (targetSquare & Bitmaps[i])
+                        {
+                            captureType = i;
+                            for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                            {
+                                if (pieceLocations[captureType][j])
+                                {
+                                    capturedIndex = j;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteKing, captureType, capturedIndex, movedIndex });
+            }
+            //West
+            targetSquare = startSquare >> 1;
+            if (((startSquare & Column::ColumnA) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+            {
+                if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                {
+                    for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                    {
+                        if (targetSquare & Bitmaps[i])
+                        {
+                            captureType = i;
+                            for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                            {
+                                if (pieceLocations[captureType][j])
+                                {
+                                    capturedIndex = j;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteKing, captureType, capturedIndex, movedIndex });
+            }
+            //East
+            targetSquare = startSquare << 1;
+            if (((startSquare & Column::ColumnH) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+            {
+                if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                {
+                    for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                    {
+                        if (targetSquare & Bitmaps[i])
+                        {
+                            captureType = i;
+                            for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                            {
+                                if (pieceLocations[captureType][j])
+                                {
+                                    capturedIndex = j;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteKing, captureType, capturedIndex, movedIndex });
+            }
+            //South West
+            targetSquare = startSquare >> 9;
+            if ((pieceLocations[Bitmap::WhiteKing][i] >= Row::Row2) && ((startSquare & Column::ColumnA) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+            {
+                if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                {
+                    for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                    {
+                        if (targetSquare & Bitmaps[i])
+                        {
+                            captureType = i;
+                            for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                            {
+                                if (pieceLocations[captureType][j])
+                                {
+                                    capturedIndex = j;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteKing, captureType, capturedIndex, movedIndex });
+            }
+            //South
+            targetSquare = startSquare >> 8;
+            if ((pieceLocations[Bitmap::WhiteKing][i] >= Row::Row2) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+            {
+                if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                {
+                    for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                    {
+                        if (targetSquare & Bitmaps[i])
+                        {
+                            captureType = i;
+                            for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                            {
+                                if (pieceLocations[captureType][j])
+                                {
+                                    capturedIndex = j;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteKing, captureType, capturedIndex, movedIndex });
+            }
+            //South East
+            targetSquare = startSquare >> 7;
+            if ((pieceLocations[Bitmap::WhiteKing][i] >= Row::Row2) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull])) == targetSquare))
+            {
+                if ((targetSquare & (Bitmaps[Bitmap::BlackFull])) == targetSquare)
+                {
+                    for (int i = Bitmap::BlackPawn; i < Bitmap::BlackKing; i++)
+                    {
+                        if (targetSquare & Bitmaps[i])
+                        {
+                            captureType = i;
+                            for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                            {
+                                if (pieceLocations[captureType][j])
+                                {
+                                    capturedIndex = j;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::WhiteKing, captureType, capturedIndex, movedIndex });
+            }
+        }
+    }
+    if (moveSide == 1)
+    {
+        for (int i = 0; i < pieceLocations[Bitmap::BlackKing].size(); i++)
+        {
+            startSquare = 1ULL << pieceLocations[Bitmap::BlackKing][i];
+
+            //North West
+            targetSquare = startSquare << 7;
+            if ((pieceLocations[Bitmap::BlackKing][i] < Row::Row8) && ((startSquare & Column::ColumnA) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+            {
+                if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                {
+                    for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                    {
+                        if (targetSquare & Bitmaps[i])
+                        {
+                            captureType = i;
+                            for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                            {
+                                if (pieceLocations[captureType][j])
+                                {
+                                    capturedIndex = j;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackKing, captureType, capturedIndex, movedIndex });
+            }
+            //North
+            targetSquare = startSquare << 8;
+            if ((pieceLocations[Bitmap::BlackKing][i] < Row::Row8) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+            {
+                if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                {
+                    for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                    {
+                        if (targetSquare & Bitmaps[i])
+                        {
+                            captureType = i;
+                            for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                            {
+                                if (pieceLocations[captureType][j])
+                                {
+                                    capturedIndex = j;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackKing, captureType, capturedIndex, movedIndex });
+            }
+            //North East
+            targetSquare = startSquare << 9;
+            if ((pieceLocations[Bitmap::BlackKing][i] < Row::Row8) && ((startSquare & Column::ColumnH) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+            {
+                if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                {
+                    for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                    {
+                        if (targetSquare & Bitmaps[i])
+                        {
+                            captureType = i;
+                            for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                            {
+                                if (pieceLocations[captureType][j])
+                                {
+                                    capturedIndex = j;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackKing, captureType, capturedIndex, movedIndex });
+            }
+            //West
+            targetSquare = startSquare >> 1;
+            if (((startSquare & Column::ColumnA) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+            {
+                if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                {
+                    for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                    {
+                        if (targetSquare & Bitmaps[i])
+                        {
+                            captureType = i;
+                            for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                            {
+                                if (pieceLocations[captureType][j])
+                                {
+                                    capturedIndex = j;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackKing, captureType, capturedIndex, movedIndex });
+            }
+            //East
+            targetSquare = startSquare << 1;
+            if (((startSquare & Column::ColumnH) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+            {
+                if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                {
+                    for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                    {
+                        if (targetSquare & Bitmaps[i])
+                        {
+                            captureType = i;
+                            for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                            {
+                                if (pieceLocations[captureType][j])
+                                {
+                                    capturedIndex = j;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackKing, captureType, capturedIndex, movedIndex });
+            }
+            //South West
+            targetSquare = startSquare >> 9;
+            if ((pieceLocations[Bitmap::BlackKing][i] >= Row::Row2) && ((startSquare & Column::ColumnA) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+            {
+                if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                {
+                    for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                    {
+                        if (targetSquare & Bitmaps[i])
+                        {
+                            captureType = i;
+                            for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                            {
+                                if (pieceLocations[captureType][j])
+                                {
+                                    capturedIndex = j;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackKing, captureType, capturedIndex, movedIndex });
+            }
+            //South
+            targetSquare = startSquare >> 8;
+            if ((pieceLocations[Bitmap::BlackKing][i] >= Row::Row2) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+            {
+                if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                {
+                    for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                    {
+                        if (targetSquare & Bitmaps[i])
+                        {
+                            captureType = i;
+                            for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                            {
+                                if (pieceLocations[captureType][j])
+                                {
+                                    capturedIndex = j;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackKing, captureType, capturedIndex, movedIndex });
+            }
+            //South East
+            targetSquare = startSquare >> 7;
+            if ((pieceLocations[Bitmap::BlackKing][i] >= Row::Row2) && ((targetSquare & ~(Bitmaps[Bitmap::BlackFull])) == targetSquare))
+            {
+                if ((targetSquare & (Bitmaps[Bitmap::WhiteFull])) == targetSquare)
+                {
+                    for (int i = Bitmap::WhitePawn; i < Bitmap::WhiteKing; i++)
+                    {
+                        if (targetSquare & Bitmaps[i])
+                        {
+                            captureType = i;
+                            for (int j = 0; j < pieceLocations[captureType].size(); j++)
+                            {
+                                if (pieceLocations[captureType][j])
+                                {
+                                    capturedIndex = j;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                LegalMoves.push_back(Move{ BitmapsToMove(startSquare, targetSquare), startSquare, targetSquare, NULL, Bitmap::BlackKing, captureType, capturedIndex, movedIndex });
+            }
+        }
+    }
+    
+}
 
 std::string Chessboard::BitmapsToMove(unsigned long long startSquare, unsigned long long targetSquare) {
     std::string move;
