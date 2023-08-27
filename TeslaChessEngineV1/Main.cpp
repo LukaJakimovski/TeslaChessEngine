@@ -50,9 +50,10 @@ unsigned long long BasicPerft(int depth, Chessboard board) {
     if (depth == 0) return 1ULL;
     unsigned long long nodes = 0ULL;
     board.FindAllMoves();
+    if (depth == 1) return board.TrueLegalMoves.size();
     std::vector<Move> moves = board.TrueLegalMoves;
-    if (depth == 1) return moves.size();
     Chessboard boardCopy = board;
+
     for (int i = 0; i < moves.size(); i++)
     {
         board.MakeMove(moves[i]);
@@ -78,6 +79,7 @@ int main()
     auto totalDuration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
     totalStart = std::chrono::high_resolution_clock::now();
+    
     //Position 1
     depth = 5;
     expected = 4865609;
@@ -91,7 +93,7 @@ int main()
     std::cout << "Nodes Counted: " << nodes << " Expected Nodes: " << expected << " Position FEN: " << position << " Depth: " << depth << " Time Spent " << duration.count() << " microseconds";
     if (expected == nodes) std::cout << " PASSED\n";
     else std::cout << " FAILED\n";
-
+    
     //Position 2
     depth = 4;
     expected = 4085603;
@@ -165,4 +167,5 @@ int main()
     totalDuration = std::chrono::duration_cast<std::chrono::microseconds>(totalEnd - totalStart);
     std::cout << "\nTotal time elapsed: " << totalDuration.count() << " microseconds";
     std::cin >> nodes;
+    
 }

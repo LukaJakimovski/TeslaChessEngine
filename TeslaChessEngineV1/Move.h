@@ -12,8 +12,8 @@ public:
 	int CapturedIndex;
 	int MovedIndex;
 	int PromotionType;
-
 	Move(std::string moveString, unsigned long long startSquare, unsigned long long targetSquare, unsigned long long enPassantTarget,  int pieceType, int captureType, int capturedIndex, int movedIndex);
 	Move(std::string moveString, unsigned long long startSquare, unsigned long long targetSquare, unsigned long long enPassantTarget, int pieceType, int captureType, int capturedIndex, int movedIndex, int promotionType);
+	Move();
 };
 

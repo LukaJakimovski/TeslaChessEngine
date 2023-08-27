@@ -21,15 +21,15 @@ namespace Bitmap {
     };
 }
 namespace Row {
-    enum Row : int {
-        Row1 = 0,
-        Row2 = 8,
-        Row3 = 16,
-        Row4 = 24,
-        Row5 = 32,
-        Row6 = 40,
-        Row7 = 48,
-        Row8 = 56,
+    enum Row : unsigned long long {
+        Row1 = 0b0000000000000000000000000000000000000000000000000000000011111111,
+        Row2 = Row1 << 8,
+        Row3 = Row2 << 8,
+        Row4 = Row3 << 8,
+        Row5 = Row4 << 8,
+        Row6 = Row5 << 8,
+        Row7 = Row6 << 8,
+        Row8 = Row7 << 8,
     };
 }
 namespace Column {
