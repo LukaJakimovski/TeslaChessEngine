@@ -1,7 +1,6 @@
 #include "Enums.h"
 #include "ChessBoard.h"
 #include <iostream>
-
 Chessboard::Chessboard() {
     moveSide = 0;
     for (int i = 0; i < 4; i++) castlingAbility[i] = 0;
@@ -11,6 +10,13 @@ Chessboard::Chessboard() {
     for (int i = 0; i < 14; i++) Bitmaps[i] = 0UL;
     attackedSquares[0] = 0ULL;
     attackedSquares[1] = 0ULL;
+    stalemate = 0;
+    checkmate = 0;
+    data = new int[2];
+    for (int i = 0; i < 218; i++) {
+        LegalMoves[i] = {};
+        TrueLegalMoves[i] = {};
+    }
 }
 
 void Chessboard::LoadPosition(std::string FEN) {
@@ -23,6 +29,8 @@ void Chessboard::LoadPosition(std::string FEN) {
     attackedSquares[0] = 0ULL;
     attackedSquares[1] = 0ULL;
 
+    LegalMovesSize = 0;
+    TrueLegalMovesSize = 0;
     int boardIndex = 56;
     int index = 0;
     //Set board to FEN position
@@ -104,31 +112,26 @@ void Chessboard::LoadPosition(std::string FEN) {
 
 void Chessboard::FindSlidingMoves(unsigned long long rowConstraint, unsigned long long columnConstraint, bool side, unsigned long long targetSquare, unsigned long long startSquare, int movePiece, int shiftAmount) {
     int negative = 0b10000000000000000000000000000000;
-    int movedIndex = BitmapToBitindex(startSquare);
     int offSet = 0;
-    int currentIndex = 0;
-    int* data = new int[3];
     unsigned long long tempStart = 0;
-    
-    *data = -1;
+
+    data[0] = -1;
     tempStart = startSquare;
-    currentIndex = movedIndex + shiftAmount;
     if (side == 1) offSet = 7;
     while (true)
     {
         if (((tempStart & rowConstraint) == 0) && ((tempStart & columnConstraint) == 0) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
         {
-            data = GetCaptureType(targetSquare);
-            LegalMoves.push_back(Move{ BitmapsToMove(movedIndex, currentIndex), startSquare, targetSquare, NULL, movePiece + offSet, *data, *(data + 1), movedIndex });
+            GetCaptureType(targetSquare);
+            LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, movePiece + offSet, data[0] };
+            LegalMovesSize++;
         }
         else break;
-        if (*(data + 2) == 1) break;
+        if (data[1] == 1) break;
         tempStart = targetSquare;
         if ((shiftAmount & negative) == negative) targetSquare = targetSquare >> (~shiftAmount + 1);
         else targetSquare = targetSquare << shiftAmount;
-        currentIndex += shiftAmount;
     }
-    delete[] data;
 }
 
 void Chessboard::FindLegalMoves() {
@@ -142,57 +145,78 @@ void Chessboard::FindLegalMoves() {
 
 void Chessboard::FindAllMoves() {
     FindLegalMoves();
-    FindAttackedSquares();
     FindTrueLegalMoves();
+    FindAttackedSquares();
     FindCastlingMoves();
 }
 
 void Chessboard::FindPawnMoves() {
     unsigned long long startSquare = 1UL;
     unsigned long long targetSquare = 1UL;
-    int movedIndex = 0;
-    int* data = new int[3];
-    *data = -1;
+    data[0] = -1;
     if (moveSide == 0) {
         for (int i = 0; i < 64; i++)
         {
             if ((1ULL << i & Bitmaps[Bitmap::WhitePawn]))
             {
                 startSquare = 1ULL << i;
-                movedIndex = i;
                 //Forward
                 targetSquare = startSquare << 8;
                 if (((targetSquare & ~(Bitmaps[Bitmap::Full])) == targetSquare))
                 {
                     //Promotion
-                    if (startSquare & Row::Row7) for(int j = Bitmap::WhiteKnight; j < Bitmap::WhiteKing; j++) LegalMoves.emplace_back(Move{ BitmapsToMove(movedIndex, movedIndex + 8, j), startSquare, targetSquare, NULL, Bitmap::WhitePawn, *data, *(data + 1), movedIndex, j });
+                    if (startSquare & Row::Row7) for (int j = Bitmap::WhiteKnight; j < Bitmap::WhiteKing; j++) {
+                        LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhitePawn, data[0], j };
+                        LegalMovesSize++;
+                    }
                     //Normal Move
-                    else LegalMoves.emplace_back(Move{ BitmapsToMove(movedIndex, movedIndex + 8), startSquare, targetSquare, NULL, Bitmap::WhitePawn, *data, *(data + 1), movedIndex });
+                    else {
+                        LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhitePawn, data[0] };
+                        LegalMovesSize++;
+                    }
                     //2 Squares
                     targetSquare = startSquare << 16;
-                    if (((targetSquare & ~(Bitmaps[Bitmap::Full])) == targetSquare) && startSquare & Row::Row2) LegalMoves.emplace_back(Move{ BitmapsToMove(movedIndex, movedIndex + 16), startSquare, targetSquare, startSquare << 8, Bitmap::WhitePawn, *data, *(data + 1), movedIndex });
+                    if (((targetSquare & ~(Bitmaps[Bitmap::Full])) == targetSquare) && startSquare & Row::Row2) {
+                        LegalMoves[LegalMovesSize] = { startSquare, targetSquare, startSquare << 8, Bitmap::WhitePawn, data[0] };
+                        LegalMovesSize++;
+                    }
                 }
                 //Capture North West
                 targetSquare = startSquare << 7;
                 if (((targetSquare & (Bitmaps[Bitmap::BlackFull] | enPassantTarget)) == targetSquare) && ((startSquare & Column::ColumnA) != startSquare))
                 {
-                    data = GetCaptureType(targetSquare);
+                    GetCaptureType(targetSquare);
                     //Promotion
-                    if (startSquare & Row::Row7) for(int j = Bitmap::WhiteKnight; j < Bitmap::WhiteKing; j++) LegalMoves.emplace_back(Move{ BitmapsToMove(movedIndex, movedIndex + 7, j), startSquare, targetSquare, NULL, Bitmap::WhitePawn, *data, *(data + 1), movedIndex, j });
+                    if (startSquare & Row::Row7) for (int j = Bitmap::WhiteKnight; j < Bitmap::WhiteKing; j++) {
+                        LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhitePawn, data[0], j };
+                        LegalMovesSize++;
+                    }
+
                     //Normal Move
-                    else LegalMoves.push_back(Move{ BitmapsToMove(movedIndex, movedIndex + 7), startSquare, targetSquare, NULL, Bitmap::WhitePawn, *data, *(data + 1), movedIndex });
-                    *data = -1;
+                    else {
+                        LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhitePawn, data[0] };
+                        LegalMovesSize++;
+                    }
+                    data[0] = -1;
                 }
                 // Capture North East
                 targetSquare = startSquare << 9;
                 if (((targetSquare & (Bitmaps[Bitmap::BlackFull] | enPassantTarget)) == targetSquare) && ((startSquare & (Column::ColumnH)) != startSquare))
                 {
-                    data = GetCaptureType(targetSquare);
+                    GetCaptureType(targetSquare);
                     //Promotion
-                    if (startSquare & Row::Row7) for (int j = Bitmap::WhiteKnight; j < Bitmap::WhiteKing; j++) LegalMoves.emplace_back(Move{ BitmapsToMove(movedIndex, movedIndex + 9, j), startSquare, targetSquare, NULL, Bitmap::WhitePawn, *data, *(data + 1), movedIndex, j });
+                    if (startSquare & Row::Row7) for (int j = Bitmap::WhiteKnight; j < Bitmap::WhiteKing; j++) {
+                        LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhitePawn, data[0], j };
+                        LegalMovesSize++;
+                    }
+
                     //Normal Move
-                    else LegalMoves.push_back(Move{ BitmapsToMove(movedIndex, movedIndex + 9), startSquare, targetSquare, NULL, Bitmap::WhitePawn, *data, *(data + 1), movedIndex });
-                    *data = -1;
+                    else {
+                        LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhitePawn, data[0] };
+                        LegalMovesSize++;
+                    }
+
+                    data[0] = -1;
                 }
             }
         }
@@ -204,54 +228,71 @@ void Chessboard::FindPawnMoves() {
             if ((1ULL << i & Bitmaps[Bitmap::BlackPawn]))
             {
                 startSquare = 1ULL << i;
-                movedIndex = i;
                 //Black Pawns
                 //Forward
                 targetSquare = startSquare >> 8;
                 if (((targetSquare & ~(Bitmaps[Bitmap::Full])) == targetSquare))
                 {
                     //Promotion
-                    if (startSquare & Row::Row2) for (int j = Bitmap::BlackKnight; j < Bitmap::BlackKing; j++) LegalMoves.emplace_back(Move{ BitmapsToMove(movedIndex, movedIndex - 8, j), startSquare, targetSquare, NULL, Bitmap::BlackPawn, *data, *(data + 1), movedIndex, j });
+                    if (startSquare & Row::Row2) for (int j = Bitmap::BlackKnight; j < Bitmap::BlackKing; j++) {
+                        LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::BlackPawn, data[0], j };
+                        LegalMovesSize++;
+                    }
                     //Normal Move
-                    else LegalMoves.emplace_back(Move{ BitmapsToMove(movedIndex, movedIndex - 8), startSquare, targetSquare, NULL, Bitmap::BlackPawn, *data, *(data + 1), movedIndex});
+                    else {
+                        LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::BlackPawn, data[0] };
+                        LegalMovesSize++;
+                    }
                     targetSquare = startSquare >> 16;
                     //2 Squares
-                    if (((targetSquare & ~(Bitmaps[Bitmap::Full])) == targetSquare) && (startSquare & Row::Row7)) LegalMoves.emplace_back(Move{ BitmapsToMove(movedIndex, movedIndex - 16), startSquare, targetSquare, startSquare >> 8, Bitmap::BlackPawn, *data, *(data + 1), movedIndex});
+                    if (((targetSquare & ~(Bitmaps[Bitmap::Full])) == targetSquare) && (startSquare & Row::Row7)) {
+                        LegalMoves[LegalMovesSize] = { startSquare, targetSquare, startSquare >> 8, Bitmap::BlackPawn, data[0] };
+                        LegalMovesSize++;
+                    }
                 }
                 //Capture South East
                 targetSquare = startSquare >> 7;
                 if (((targetSquare & (Bitmaps[Bitmap::WhiteFull] | enPassantTarget)) == targetSquare) && ((startSquare & Column::ColumnH) != startSquare))
                 {
-                    data = GetCaptureType(targetSquare);
+                    GetCaptureType(targetSquare);
                     //Promotion
-                    if (startSquare & Row::Row2) for (int j = Bitmap::BlackKnight; j < Bitmap::BlackKing; j++) LegalMoves.emplace_back(Move{ BitmapsToMove(movedIndex, movedIndex - 7, j), startSquare, targetSquare, NULL, Bitmap::BlackPawn, *data, *(data + 1), movedIndex, j });
+                    if (startSquare & Row::Row2) for (int j = Bitmap::BlackKnight; j < Bitmap::BlackKing; j++) {
+                        LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::BlackPawn, data[0], j };
+                        LegalMovesSize++;
+                    }
                     //Normal Move
-                    else LegalMoves.push_back(Move{ BitmapsToMove(movedIndex, movedIndex - 7), startSquare, targetSquare, NULL, Bitmap::BlackPawn, *data, *(data + 1), movedIndex });
-                    *data = -1;
+                    else {
+                        LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::BlackPawn, data[0] };
+                        LegalMovesSize++;
+                    }
+                    data[0] = -1;
                 }
                 // Capture South West
                 targetSquare = startSquare >> 9;
                 if (((targetSquare & (Bitmaps[Bitmap::WhiteFull] | enPassantTarget)) == targetSquare) && ((startSquare & Column::ColumnA) != startSquare))
                 {
-                    data = GetCaptureType(targetSquare);
+                    GetCaptureType(targetSquare);
                     //Promotion
-                    if (startSquare & Row::Row2) for (int j = Bitmap::BlackKnight; j < Bitmap::BlackKing; j++) LegalMoves.emplace_back(Move{ BitmapsToMove(movedIndex, movedIndex - 9, j), startSquare, targetSquare, NULL, Bitmap::BlackPawn, *data, *(data + 1), movedIndex, j });
+                    if (startSquare & Row::Row2) for (int j = Bitmap::BlackKnight; j < Bitmap::BlackKing; j++) {
+                        LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::BlackPawn, data[0], j };
+                        LegalMovesSize++;
+                    }
                     //Normal Move
-                    else LegalMoves.push_back(Move{ BitmapsToMove(movedIndex, movedIndex - 9), startSquare, targetSquare, NULL, Bitmap::BlackPawn, *data, *(data + 1), movedIndex });
-                    *data = -1;
+                    else {
+                        LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::BlackPawn, data[0] };
+                        LegalMovesSize++;
+                    }
+                    data[0] = -1;
                 }
             }
         }
     }
-    delete[] data;
 }
 
 void Chessboard::FindKnightMoves() {
     unsigned long long startSquare = 1UL;
     unsigned long long targetSquare = 1UL;
-    int movedIndex = 0;
-    int* data = new int[3];
-    *data = -1;
+    data[0] = -1;
     int offSet = 0;
     if (moveSide == 1) offSet = 7;
     for (int i = 0; i < 64; i++)
@@ -259,67 +300,73 @@ void Chessboard::FindKnightMoves() {
         if ((1ULL << i & Bitmaps[Bitmap::WhiteKnight + offSet]))
         {
             startSquare = 1ULL << i;
-            movedIndex = i;
 
             //North North West
             targetSquare = startSquare << 15;
             if (((startSquare & (Row::Row7 | Row::Row8)) == 0) && ((startSquare & Column::ColumnA) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
-                LegalMoves.push_back(Move{ BitmapsToMove(movedIndex, movedIndex + 15), startSquare, targetSquare, NULL, Bitmap::WhiteKnight + offSet, *data, *(data + 1), movedIndex });
+                GetCaptureType(targetSquare);
+                LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhiteKnight + offSet, data[0] };
+                LegalMovesSize++;
             }
             //North North East
             targetSquare = startSquare << 17;
             if (((startSquare & (Row::Row7 | Row::Row8)) == 0) && ((startSquare & Column::ColumnH) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
-                LegalMoves.push_back(Move{ BitmapsToMove(movedIndex, movedIndex + 17), startSquare, targetSquare, NULL, Bitmap::WhiteKnight + offSet, *data, *(data + 1), movedIndex });
+                GetCaptureType(targetSquare);
+                LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhiteKnight + offSet, data[0] };
+                LegalMovesSize++;
             }
             //North West West
             targetSquare = startSquare << 6;
             if (((startSquare & Row::Row8) == 0) && ((startSquare & (Column::ColumnA | Column::ColumnB)) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
-                LegalMoves.push_back(Move{ BitmapsToMove(movedIndex, movedIndex + 6), startSquare, targetSquare, NULL, Bitmap::WhiteKnight + offSet, *data, *(data + 1), movedIndex });
+                GetCaptureType(targetSquare);
+                LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhiteKnight + offSet, data[0] };
+                LegalMovesSize++;
             }
             //North East East
             targetSquare = startSquare << 10;
             if (((startSquare & Row::Row8) == 0) && ((startSquare & (Column::ColumnG | Column::ColumnH)) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
-                LegalMoves.push_back(Move{ BitmapsToMove(movedIndex, movedIndex + 10), startSquare, targetSquare, NULL, Bitmap::WhiteKnight + offSet, *data, *(data + 1), movedIndex });
+                GetCaptureType(targetSquare);
+                LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhiteKnight + offSet, data[0] };
+                LegalMovesSize++;
             }
             //South West West
             targetSquare = startSquare >> 10;
             if (((startSquare & Row::Row1) == 0) && ((startSquare & (Column::ColumnA | Column::ColumnB)) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
-                LegalMoves.push_back(Move{ BitmapsToMove(movedIndex, movedIndex - 10), startSquare, targetSquare, NULL, Bitmap::WhiteKnight + offSet, *data, *(data + 1), movedIndex });
+                GetCaptureType(targetSquare);
+                LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhiteKnight + offSet, data[0] };
+                LegalMovesSize++;
             }
             //South East East
             targetSquare = startSquare >> 6;
             if (((startSquare & Row::Row1) == 0) && ((startSquare & (Column::ColumnG | Column::ColumnH)) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
-                LegalMoves.push_back(Move{ BitmapsToMove(movedIndex, movedIndex - 6), startSquare, targetSquare, NULL, Bitmap::WhiteKnight + offSet, *data, *(data + 1), movedIndex });
+                GetCaptureType(targetSquare);
+                LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhiteKnight + offSet, data[0] };
+                LegalMovesSize++;
             }
             //South South West
             targetSquare = startSquare >> 17;
             if (((startSquare & (Row::Row1 | Row::Row2)) == 0) && ((startSquare & Column::ColumnA) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
-                LegalMoves.push_back(Move{ BitmapsToMove(movedIndex, movedIndex - 17), startSquare, targetSquare, NULL, Bitmap::WhiteKnight + offSet, *data, *(data + 1), movedIndex });
+                GetCaptureType(targetSquare);
+                LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhiteKnight + offSet, data[0] };
+                LegalMovesSize++;
             }
             //South South East
             targetSquare = startSquare >> 15;
             if (((startSquare & (Row::Row1 | Row::Row2)) == 0) && ((startSquare & Column::ColumnH) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
-                LegalMoves.push_back(Move{ BitmapsToMove(movedIndex, movedIndex - 15), startSquare, targetSquare, NULL, Bitmap::WhiteKnight + offSet, *data, *(data + 1), movedIndex });
+                GetCaptureType(targetSquare);
+                LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhiteKnight + offSet, data[0] };
+                LegalMovesSize++;
             }
         }
     }
-    delete[] data;
 }
 
 void Chessboard::FindBishopMoves() {
@@ -396,11 +443,7 @@ void Chessboard::FindQueenMoves() {
 void Chessboard::FindKingMoves() {
     unsigned long long startSquare = 1ULL;
     unsigned long long targetSquare = 1ULL;
-    int captureType = -1;
-    int capturedIndex = -1;
-    int movedIndex = 0;
-    int* data = new int[3];
-    *data = -1;
+    data[0] = -1;
     int offSet = 0;
     if (moveSide == 1) offSet = 7;
     for (int i = 0; i < 64; i++)
@@ -408,67 +451,73 @@ void Chessboard::FindKingMoves() {
         if ((1ULL << i & Bitmaps[Bitmap::WhiteKing + offSet]))
         {
             startSquare = 1ULL << i;
-            movedIndex = i;
 
             //North West
             targetSquare = startSquare << 7;
             if (((startSquare & Row::Row8) == 0) && ((startSquare & Column::ColumnA) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
-                LegalMoves.push_back(Move{ BitmapsToMove(movedIndex, movedIndex + 7), startSquare, targetSquare, NULL, Bitmap::WhiteKing + offSet, *data, *(data + 1), movedIndex });
+                GetCaptureType(targetSquare);
+                LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhiteKing + offSet, data[0] };
+                LegalMovesSize++;
             }
             //North
             targetSquare = startSquare << 8;
             if (((startSquare & Row::Row8) == 0) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
-                LegalMoves.push_back(Move{ BitmapsToMove(movedIndex, movedIndex + 8), startSquare, targetSquare, NULL, Bitmap::WhiteKing + offSet, *data, *(data + 1), movedIndex });
+                GetCaptureType(targetSquare);
+                LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhiteKing + offSet, data[0] };
+                LegalMovesSize++;
             }
             //North East
             targetSquare = startSquare << 9;
             if (((startSquare & Row::Row8) == 0) && ((startSquare & Column::ColumnH) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
-                LegalMoves.push_back(Move{ BitmapsToMove(movedIndex, movedIndex + 9), startSquare, targetSquare, NULL, Bitmap::WhiteKing + offSet, *data, *(data + 1), movedIndex });
+                GetCaptureType(targetSquare);
+                LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhiteKing + offSet, data[0] };
+                LegalMovesSize++;
             }
             //West
             targetSquare = startSquare >> 1;
             if (((startSquare & Column::ColumnA) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
-                LegalMoves.push_back(Move{ BitmapsToMove(movedIndex, movedIndex - 1), startSquare, targetSquare, NULL, Bitmap::WhiteKing + offSet, *data, *(data + 1), movedIndex });
+                GetCaptureType(targetSquare);
+                LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhiteKing + offSet, data[0] };
+                LegalMovesSize++;
             }
             //East
             targetSquare = startSquare << 1;
             if (((startSquare & Column::ColumnH) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
-                LegalMoves.push_back(Move{ BitmapsToMove(movedIndex, movedIndex + 1), startSquare, targetSquare, NULL, Bitmap::WhiteKing + offSet, *data, *(data + 1), movedIndex });
+                GetCaptureType(targetSquare);
+                LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhiteKing + offSet, data[0] };
+                LegalMovesSize++;
             }
             //South West
             targetSquare = startSquare >> 9;
             if (((startSquare & Row::Row1) == 0) && ((startSquare & Column::ColumnA) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
-                LegalMoves.push_back(Move{ BitmapsToMove(movedIndex, movedIndex - 9), startSquare, targetSquare, NULL, Bitmap::WhiteKing + offSet, *data, *(data + 1), movedIndex });
+                GetCaptureType(targetSquare);
+                LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhiteKing + offSet, data[0] };
+                LegalMovesSize++;
             }
             //South
             targetSquare = startSquare >> 8;
             if (((startSquare & Row::Row1) == 0) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
-                LegalMoves.push_back(Move{ BitmapsToMove(movedIndex, movedIndex - 8), startSquare, targetSquare, NULL, Bitmap::WhiteKing + offSet, *data, *(data + 1), movedIndex });
+                GetCaptureType(targetSquare);
+                LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhiteKing + offSet, data[0] };
+                LegalMovesSize++;
             }
             //South East
             targetSquare = startSquare >> 7;
             if (((startSquare & Row::Row1) == 0) && ((startSquare & Column::ColumnH) != startSquare) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
-                LegalMoves.push_back(Move{ BitmapsToMove(movedIndex, movedIndex - 7), startSquare, targetSquare, NULL, Bitmap::WhiteKing + offSet, *data, *(data + 1), movedIndex });
+                GetCaptureType(targetSquare);
+                LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhiteKing + offSet, data[0] };
+                LegalMovesSize++;
             }
         }
     }
-    delete[] data;
 }
 
 void Chessboard::FindTrueLegalMoves() {
@@ -477,13 +526,9 @@ void Chessboard::FindTrueLegalMoves() {
     unsigned long long startSquare = 1ULL;
     unsigned long long targetSquare = 1ULL;
     unsigned long long tempStart = 1ULL;
-    int currentIndex = 0;
-    int movedIndex = 0;
     int offSet = 0;
-    int moveLegal = 1;
     int kingIndex = 0;
-    int* data = new int[3];
-    *data = -1;
+    data[0] = -1;
 
     if (moveSide == 1) offSet = 7;
     for (size_t i = 0; i < 64; i++)
@@ -494,7 +539,7 @@ void Chessboard::FindTrueLegalMoves() {
             break;
         }
     }
-    for (size_t i = 0; i < LegalMoves.size(); i++)
+    for (size_t i = 0; i < LegalMovesSize; i++)
     {
         //For pawn promotion
         if (LegalMoves[i].PromotionType != 0)
@@ -529,160 +574,144 @@ void Chessboard::FindTrueLegalMoves() {
         //North West
         targetSquare = startSquare << 7;
         tempStart = startSquare;
-        currentIndex = kingIndex;
         while (true)
         {
-            if (((tempStart & Row::Row8) == 0) && ((tempStart & Column::ColumnA) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare)) data = GetCaptureType(targetSquare);
+            if (((tempStart & Row::Row8) == 0) && ((tempStart & Column::ColumnA) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare)) GetCaptureType(targetSquare);
             else break;
-            if (*(data + 2) == 1)
+            if (data[1] == 1)
             {
-                if (*data == Bitmap::WhiteBishop + 7 - offSet || *data == Bitmap::WhiteQueen + 7 - offSet) goto False;
+                if (data[0] == Bitmap::WhiteBishop + 7 - offSet || data[0] == Bitmap::WhiteQueen + 7 - offSet) goto False;
                 else break;
             }
             tempStart = targetSquare;
             targetSquare = targetSquare << 7;
-            currentIndex += 7;
         }
         //North East
         targetSquare = startSquare << 9;
         tempStart = startSquare;
-        currentIndex = kingIndex;
         while (true)
         {
             if (((tempStart & Row::Row8) == 0) && ((tempStart & Column::ColumnH) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
+                GetCaptureType(targetSquare);
             }
             else break;
-            if (*(data + 2) == 1)
+            if (data[1] == 1)
             {
-                if (*data == Bitmap::WhiteBishop + 7 - offSet || *data == Bitmap::WhiteQueen + 7 - offSet) goto False;
+                if (data[0] == Bitmap::WhiteBishop + 7 - offSet || data[0] == Bitmap::WhiteQueen + 7 - offSet) goto False;
                 else break;
             }
             tempStart = targetSquare;
             targetSquare = targetSquare << 9;
-            currentIndex += 9;
         }
         //South West
         targetSquare = startSquare >> 9;
         tempStart = startSquare;
-        currentIndex = kingIndex;
         while (true)
         {
             if (((tempStart & Row::Row1) == 0) && ((tempStart & Column::ColumnA) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
+                GetCaptureType(targetSquare);
             }
             else break;
-            if (*(data + 2) == 1)
+            if (data[1] == 1)
             {
-                if (*data == Bitmap::WhiteBishop + 7 - offSet || *data == Bitmap::WhiteQueen + 7 - offSet) goto False;
+                if (data[0] == Bitmap::WhiteBishop + 7 - offSet || data[0] == Bitmap::WhiteQueen + 7 - offSet) goto False;
                 else break;
             }
             tempStart = targetSquare;
             targetSquare = targetSquare >> 9;
-            currentIndex -= 9;
         }
         //South East
         targetSquare = startSquare >> 7;
         tempStart = startSquare;
-        currentIndex = kingIndex;
         while (true)
         {
             if (((tempStart & Row::Row1) == 0) && ((tempStart & Column::ColumnH) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
+                GetCaptureType(targetSquare);
             }
             else break;
-            if (*(data + 2) == 1)
+            if (data[1] == 1)
             {
-                if (*data == Bitmap::WhiteBishop + 7 - offSet || *data == Bitmap::WhiteQueen + 7 - offSet) goto False;
+                if (data[0] == Bitmap::WhiteBishop + 7 - offSet || data[0] == Bitmap::WhiteQueen + 7 - offSet) goto False;
                 else break;
             }
             tempStart = targetSquare;
             targetSquare = targetSquare >> 7;
-            currentIndex -= 7;
         }
 
         //North
         targetSquare = startSquare << 8;
         tempStart = startSquare;
-        currentIndex = kingIndex;
         while (true)
         {
             if (((tempStart & Row::Row8) == 0) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
+                GetCaptureType(targetSquare);
             }
             else break;
-            if (*(data + 2) == 1)
+            if (data[1] == 1)
             {
-                if (*data == Bitmap::WhiteRook + 7 - offSet || *data == Bitmap::WhiteQueen + 7 - offSet) goto False;
+                if (data[0] == Bitmap::WhiteRook + 7 - offSet || data[0] == Bitmap::WhiteQueen + 7 - offSet) goto False;
                 else break;
             }
             tempStart = targetSquare;
             targetSquare = targetSquare << 8;
-            currentIndex += 8;
         }
         //East
         targetSquare = startSquare << 1;
         tempStart = startSquare;
-        currentIndex = kingIndex;
         while (true)
         {
             if (((tempStart & Column::ColumnH) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
+                GetCaptureType(targetSquare);
             }
             else break;
-            if (*(data + 2) == 1)
+            if (data[1] == 1)
             {
-                if (*data == Bitmap::WhiteRook + 7 - offSet || *data == Bitmap::WhiteQueen + 7 - offSet) goto False;
+                if (data[0] == Bitmap::WhiteRook + 7 - offSet || data[0] == Bitmap::WhiteQueen + 7 - offSet) goto False;
                 else break;
             }
             tempStart = targetSquare;
             targetSquare = targetSquare << 1;
-            currentIndex += 1;
         }
         //South
         targetSquare = startSquare >> 8;
         tempStart = startSquare;
-        currentIndex = kingIndex;
         while (true)
         {
             if (((tempStart & Row::Row1) == 0) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
+                GetCaptureType(targetSquare);
             }
             else break;
-            if (*(data + 2) == 1)
+            if (data[1] == 1)
             {
-                if (*data == Bitmap::WhiteRook + 7 - offSet || *data == Bitmap::WhiteQueen + 7 - offSet) goto False;
+                if (data[0] == Bitmap::WhiteRook + 7 - offSet || data[0] == Bitmap::WhiteQueen + 7 - offSet) goto False;
                 else break;
             }
             tempStart = targetSquare;
             targetSquare = targetSquare >> 8;
-            currentIndex -= 8;
         }
         //West
         targetSquare = startSquare >> 1;
         tempStart = startSquare;
-        currentIndex = kingIndex;
         while (true)
         {
             if (((tempStart & Column::ColumnA) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
             {
-                data = GetCaptureType(targetSquare);
+                GetCaptureType(targetSquare);
             }
             else break;
-            if (*(data + 2) == 1)
+            if (data[1] == 1)
             {
-                if (*data == Bitmap::WhiteRook + 7 - offSet || *data == Bitmap::WhiteQueen + 7 - offSet) goto False;
+                if (data[0] == Bitmap::WhiteRook + 7 - offSet || data[0] == Bitmap::WhiteQueen + 7 - offSet) goto False;
                 else break;
             }
             tempStart = targetSquare;
             targetSquare = targetSquare >> 1;
-            currentIndex -= 1;
         }
         //North North West
         if (((startSquare & (Row::Row8 | Row::Row7)) == 0) && ((startSquare & Column::ColumnA) != startSquare) && ((startSquare << 15 & (Bitmaps[Bitmap::WhiteKnight + 7 - offSet])) == startSquare << 15)) goto False;
@@ -715,7 +744,8 @@ void Chessboard::FindTrueLegalMoves() {
             // Capture North East
             if (startSquare << 9 != 0 && ((startSquare << 9 & (Bitmaps[Bitmap::BlackPawn])) == startSquare << 9) && ((startSquare & (Column::ColumnH)) != startSquare)) goto False;
         }
-        TrueLegalMoves.push_back(LegalMoves[i]);
+        TrueLegalMoves[TrueLegalMovesSize] = LegalMoves[i];
+        TrueLegalMovesSize++;
     False:
         if (LegalMoves[i].CaptureType > -1) Bitmaps[LegalMoves[i].CaptureType] = tempBitmaps[LegalMoves[i].CaptureType];
         if (LegalMoves[i].PromotionType != 0) Bitmaps[LegalMoves[i].PromotionType] = tempBitmaps[LegalMoves[i].PromotionType];
@@ -726,7 +756,6 @@ void Chessboard::FindTrueLegalMoves() {
     {
         Bitmaps[i] = tempBitmaps[i];
     }
-    delete[] data;
 }
 
 void Chessboard::MakeMove(Move move) {
@@ -746,7 +775,7 @@ void Chessboard::MakeMove(Move move) {
         else Bitmaps[Bitmap::BlackPawn] ^= (move.TargetSquare >> 8);
     }
     //For Castles
-    else if (move.CaptureType == Bitmap::WhiteKing || move.CaptureType == Bitmap::BlackKing )
+    else if (move.CaptureType == Bitmap::WhiteKing || move.CaptureType == Bitmap::BlackKing)
     {
         if (move.PieceType == Bitmap::WhiteKing)
         {
@@ -774,7 +803,7 @@ void Chessboard::MakeMove(Move move) {
     else if (move.PieceType == Bitmap::WhiteRook)
     {
         if (move.StartSquare == 1) castlingAbility[1] = '-';
-        else if(move.StartSquare == 1ULL << 7) castlingAbility[0] = '-';
+        else if (move.StartSquare == 1ULL << 7) castlingAbility[0] = '-';
     }
     else if (move.PieceType == Bitmap::WhiteKing || move.PieceType == Bitmap::BlackKing)
     {
@@ -792,8 +821,8 @@ void Chessboard::MakeMove(Move move) {
     //Update fullMoveClock
     if (move.PieceType >= Bitmap::BlackPawn) fullMoveClock++;
     //Clear Legal Moves
-    LegalMoves.clear();
-    TrueLegalMoves.clear();
+    LegalMovesSize = 0;
+    TrueLegalMovesSize = 0;
     //Reset attacked squares
     attackedSquares[0] = 0;
     attackedSquares[1] = 0;
@@ -820,13 +849,13 @@ void Chessboard::CheckIfCheckmate() {
             break;
         }
     }
-    if (TrueLegalMoves.size() == 0 && (attackedSquares[sideOffSet] & (1ULL << kingIndex))) checkmate = 1;
-    else if (TrueLegalMoves.size() == 0) stalemate = 1;
+    if (TrueLegalMovesSize && (attackedSquares[sideOffSet] & (1ULL << kingIndex))) checkmate = 1;
+    else if (TrueLegalMovesSize == 0) stalemate = 1;
 }
 
 int Chessboard::BitmapToBitindex(unsigned long long bitMap) {
     int bitIndex = 0;
-    while(bitMap != 1)
+    while (bitMap != 1)
     {
         bitMap = bitMap >> 1;
         bitIndex++;
@@ -835,7 +864,6 @@ int Chessboard::BitmapToBitindex(unsigned long long bitMap) {
 }
 
 void Chessboard::FindAttackedSquares() {
-    std::vector<Move> tempLegalMoves = LegalMoves;
     int offSet = 0;
     if (moveSide == 0)
     {
@@ -843,10 +871,10 @@ void Chessboard::FindAttackedSquares() {
         offSet = 7;
     }
     else moveSide = 0;
+    int tempLegalMovesSize = LegalMovesSize;
     FindLegalMoves();
-    int size = LegalMoves.size();
     //Check for normal pieces
-    for (int i = 0; i < size; i++)
+    for (int i = 0; i < LegalMovesSize; i++)
     {
         if (LegalMoves[i].PieceType < Bitmap::WhiteFull) attackedSquares[0] |= LegalMoves[i].TargetSquare;
         else attackedSquares[1] |= LegalMoves[i].TargetSquare;
@@ -865,55 +893,54 @@ void Chessboard::FindAttackedSquares() {
             if ((Column::ColumnA & 1ULL << i != 1ULL) << i) attackedSquares[0] |= 1ULL << i >> 9;
         }
     }
-    LegalMoves = tempLegalMoves;
+    LegalMovesSize = tempLegalMovesSize;
     if (moveSide == 0) moveSide = 1;
     else moveSide = 0;
 }
 
 void Chessboard::FindCastlingMoves() {
-    unsigned long long whiteKingSideNonAttackedSquares = 0b0000000000000000000000000000000000000000000000000000000001110000;
-    unsigned long long whiteQueenSideNonAttackedSquares = 0b0000000000000000000000000000000000000000000000000000000000011100;
-    unsigned long long blackKingSideNonAttackedSquares = 0b0111000000000000000000000000000000000000000000000000000000000000;
-    unsigned long long blackQueenSideNonAttackedSquares = 0b0001110000000000000000000000000000000000000000000000000000000000;
+    unsigned long long whiteKingAttacked = 0b0000000000000000000000000000000000000000000000000000000001110000;
+    unsigned long long whiteQueenAttacked = 0b0000000000000000000000000000000000000000000000000000000000011100;
+    unsigned long long blackKingAttacked = 0b0111000000000000000000000000000000000000000000000000000000000000;
+    unsigned long long blackQueenAttacked = 0b0001110000000000000000000000000000000000000000000000000000000000;
 
-    unsigned long long whiteKingSideClearSquares = 0b000000000000000000000000000000000000000000000000000000001100000;
-    unsigned long long whiteQueenSideClearSquares = 0b0000000000000000000000000000000000000000000000000000000000001110;
-    unsigned long long blackKingSideClearSquares = 0b0110000000000000000000000000000000000000000000000000000000000000;
-    unsigned long long blackQueenSideClearSquares = 0b0000111000000000000000000000000000000000000000000000000000000000;
-    if ((castlingAbility[0] == 'K') && (whiteKingSideClearSquares & Bitmaps[Bitmap::Full]) == 0 && ((whiteKingSideNonAttackedSquares & attackedSquares[1]) == 0) && ((Bitmaps[Bitmap::Full] & (whiteKingSideNonAttackedSquares ^ Bitmaps[Bitmap::WhiteKing])) == 0) && moveSide == 0 && (Bitmaps[Bitmap::WhiteRook] & (1ULL << 7))) TrueLegalMoves.push_back(Move{ BitmapsToMove(4, 6), 1ULL << 4, 1ULL << 6, NULL, Bitmap::WhiteKing, Bitmap::WhiteKing, -1, NULL });
-    if ((castlingAbility[1] == 'Q') && (whiteQueenSideClearSquares & Bitmaps[Bitmap::Full]) == 0 && ((whiteQueenSideNonAttackedSquares & attackedSquares[1]) == 0) && ((Bitmaps[Bitmap::Full] & (whiteQueenSideNonAttackedSquares ^ Bitmaps[Bitmap::WhiteKing])) == 0) && moveSide == 0 && (Bitmaps[Bitmap::WhiteRook] & (1ULL))) TrueLegalMoves.push_back(Move{ BitmapsToMove(4, 2), 1ULL << 4, 1ULL << 2, NULL, Bitmap::WhiteKing, Bitmap::WhiteKing, -1, NULL });
-    if ((castlingAbility[2] == 'k') && (blackKingSideClearSquares & Bitmaps[Bitmap::Full]) == 0 && ((blackKingSideNonAttackedSquares & attackedSquares[0]) == 0) && ((Bitmaps[Bitmap::Full] & (blackKingSideNonAttackedSquares ^ Bitmaps[Bitmap::BlackKing])) == 0) && moveSide == 1 && (Bitmaps[Bitmap::BlackRook] & (1ULL << 63))) TrueLegalMoves.push_back(Move{ BitmapsToMove(60, 62), 1ULL << 60, 1ULL << 62, NULL, Bitmap::BlackKing, Bitmap::BlackKing, -1, NULL });
-    if ((castlingAbility[3] == 'q') && (blackQueenSideClearSquares & Bitmaps[Bitmap::Full]) == 0 && ((blackQueenSideNonAttackedSquares & attackedSquares[0]) == 0) && ((Bitmaps[Bitmap::Full] & (blackQueenSideNonAttackedSquares ^ Bitmaps[Bitmap::BlackKing])) == 0) && moveSide == 1 && (Bitmaps[Bitmap::BlackRook] & (1ULL << 56))) TrueLegalMoves.push_back(Move{ BitmapsToMove(60, 58), 1ULL << 60, 1ULL << 58, NULL, Bitmap::BlackKing, Bitmap::BlackKing, -1, NULL });
+    unsigned long long whiteKingClear = 0b000000000000000000000000000000000000000000000000000000001100000;
+    unsigned long long whiteQueenClear = 0b0000000000000000000000000000000000000000000000000000000000001110;
+    unsigned long long blackKingClear = 0b0110000000000000000000000000000000000000000000000000000000000000;
+    unsigned long long blackQueenClear = 0b0000111000000000000000000000000000000000000000000000000000000000;
+    if ((castlingAbility[0] == 'K') && (whiteKingClear & Bitmaps[Bitmap::Full]) == 0 && ((whiteKingAttacked & attackedSquares[1]) == 0) && moveSide == 0 && (Bitmaps[Bitmap::WhiteRook] & (1ULL << 7))) {
+        TrueLegalMoves[TrueLegalMovesSize] = { 1ULL << 4, 1ULL << 6, NULL, Bitmap::WhiteKing, Bitmap::WhiteKing };
+        TrueLegalMovesSize++;
+    }
+    if ((castlingAbility[1] == 'Q') && (whiteQueenClear & Bitmaps[Bitmap::Full]) == 0 && ((whiteQueenAttacked & attackedSquares[1]) == 0) && moveSide == 0 && (Bitmaps[Bitmap::WhiteRook] & (1ULL))) {
+        TrueLegalMoves[TrueLegalMovesSize] = { 1ULL << 4, 1ULL << 2, NULL, Bitmap::WhiteKing, Bitmap::WhiteKing };
+        TrueLegalMovesSize++;
+    }
+    if ((castlingAbility[2] == 'k') && (blackKingClear & Bitmaps[Bitmap::Full]) == 0 && ((blackKingAttacked & attackedSquares[0]) == 0) && moveSide == 1 && (Bitmaps[Bitmap::BlackRook] & (1ULL << 63))) {
+        TrueLegalMoves[TrueLegalMovesSize] = { 1ULL << 60, 1ULL << 62, NULL, Bitmap::BlackKing, Bitmap::BlackKing };
+        TrueLegalMovesSize++;
+    }
+    if ((castlingAbility[3] == 'q') && (blackQueenClear & Bitmaps[Bitmap::Full]) == 0 && ((blackQueenAttacked & attackedSquares[0]) == 0) && moveSide == 1 && (Bitmaps[Bitmap::BlackRook] & (1ULL << 56))) {
+        TrueLegalMoves[TrueLegalMovesSize] = { 1ULL << 60, 1ULL << 58, NULL, Bitmap::BlackKing, Bitmap::BlackKing };
+        TrueLegalMovesSize++;
+    }
 }
 
-int* Chessboard::GetCaptureType(unsigned long long targetSquare) {
-    int* ptr = new int[3];
-    *ptr = -1;
-    *(ptr + 2) = 0;
+void Chessboard::GetCaptureType(unsigned long long targetSquare) {
     int offset = 0;
+    data[0] = -1;
+    data[1] = 0;
     if (moveSide == 1) offset = -7;
     for (int i = Bitmap::BlackPawn + offset; i < Bitmap::BlackFull + offset; i++)
     {
         if (targetSquare & Bitmaps[i])
         {
-            *ptr = i;
-            *(ptr + 1) = BitmapToBitindex(targetSquare);
-            *(ptr + 2) = 1;
-            return ptr;
+            data[0] = i;
+            data[1] = 1;
+            return;
         }
     }
-    return ptr;
+    return;
 }
 
-std::string Chessboard::BitmapsToMove(int startIndex, int targetIndex, int PromotionType) {
-    std::string move = BitmapsToMove(startIndex, targetIndex);
-    if (PromotionType == Bitmap::WhiteKnight || PromotionType == Bitmap::BlackKnight) move.append("n");
-    else if (PromotionType == Bitmap::WhiteBishop || PromotionType == Bitmap::BlackBishop) move.append("b");
-    else if (PromotionType == Bitmap::WhiteRook || PromotionType == Bitmap::BlackRook) move.append("r");
-    else if (PromotionType == Bitmap::WhiteQueen || PromotionType == Bitmap::BlackQueen) move.append("q");
-    return move;
-}
 
-std::string Chessboard::BitmapsToMove(int startIndex, int targetIndex) { 
-    return moveStrings[startIndex] + moveStrings[targetIndex];
-}
