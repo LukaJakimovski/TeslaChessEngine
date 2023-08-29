@@ -576,7 +576,9 @@ void Chessboard::FindTrueLegalMoves() {
         tempStart = startSquare;
         while (true)
         {
-            if (((tempStart & Row::Row8) == 0) && ((tempStart & Column::ColumnA) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare)) GetCaptureType(targetSquare);
+            if (((tempStart & Row::Row8) == 0) && ((tempStart & Column::ColumnA) != tempStart) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare)) {
+                GetCaptureType(targetSquare);
+            }
             else break;
             if (data[1] == 1)
             {

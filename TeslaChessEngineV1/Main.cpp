@@ -28,11 +28,11 @@ unsigned long long DividePerft(int depth, Chessboard board)
         run = 1;
         for (int i = 0; i < trueSize; i++)
         {
-            strings[i] = board.TrueLegalMoves[i].MoveString;
+            strings[i] = board.TrueLegalMoves[i].GetMoveString(board.TrueLegalMoves[i].StartSquare, board.TrueLegalMoves[i].TargetSquare, board.TrueLegalMoves[i].PromotionType);
 
             if (globalDepth == 1) {
                 //std::cout << board.LegalMoves[i].MoveString << ' ';
-                std::cout << board.TrueLegalMoves[i].MoveString << ": 1";
+                std::cout << board.TrueLegalMoves[i].GetMoveString(board.TrueLegalMoves[i].StartSquare, board.TrueLegalMoves[i].TargetSquare, board.TrueLegalMoves[i].PromotionType) << ": 1";
                 std::cout << "\n";
             }
         }

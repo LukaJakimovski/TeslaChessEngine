@@ -3,7 +3,7 @@
 class Move
 {
 public:
-	char* MoveString = new char[5];
+	//char* MoveString = new char[5];
 	unsigned long long StartSquare;
 	unsigned long long TargetSquare;
 	unsigned long long EnPassantTarget;
@@ -13,7 +13,7 @@ public:
 	Move(unsigned long long startSquare, unsigned long long targetSquare, unsigned long long enPassantTarget, int pieceType, int captureType);
 	Move(unsigned long long startSquare, unsigned long long targetSquare, unsigned long long enPassantTarget, int pieceType, int captureType, int promotionType);
 	Move();
-	void BitmapsToMove(int startIndex, int targetIndex);
-	void BitmapsToMove(int startIndex, int targetIndex, int PromotionType);
+	std::string GetMoveString(int startIndex, int targetIndex, int promotionType);
+	std::string GetMoveString(int startIndex, int targetIndex);
 };
 
