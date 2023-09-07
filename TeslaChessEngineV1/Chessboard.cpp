@@ -1,10 +1,12 @@
 #include "Enums.h"
+#include "Magic.h"
 #include "ChessBoard.h"
-#include <iostream>
+
+using u64 = unsigned long long;
 int captureType = -1;
 int lastSquare = 0;
-unsigned long long startSquare = 0;
-unsigned long long targetSquare = 0;
+u64 startSquare = 0;
+u64 targetSquare = 0;
 
 Chessboard::Chessboard() {
     moveSide = 0;
@@ -108,35 +110,6 @@ void Chessboard::LoadPosition(std::string FEN) {
     }
 }
 
-void Chessboard::FindSlidingMoves(unsigned long long rowConstraint, unsigned long long columnConstraint, unsigned long long targetSquare, int movePiece, int shiftAmount) {
-    int negative = 0b10000000000000000000000000000000;
-    int offSet = 0;
-    unsigned long long tempStart = 0;
-
-    captureType = -1;
-    tempStart = startSquare;
-    if (moveSide == 1) offSet = 7;
-    while (true)
-    {
-        if (((tempStart & rowConstraint) == 0) && ((tempStart & columnConstraint) == 0) && ((targetSquare & ~(Bitmaps[Bitmap::WhiteFull + offSet])) == targetSquare))
-        {
-            GetCaptureType(targetSquare);
-            LegalMoves[LegalMovesSize].StartSquare = startSquare;
-            LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-            LegalMoves[LegalMovesSize].EnPassantTarget = 0;
-            LegalMoves[LegalMovesSize].PieceType = movePiece + offSet;
-            LegalMoves[LegalMovesSize].CaptureType = captureType;
-            LegalMoves[LegalMovesSize].PromotionType = 0;
-            LegalMovesSize++;
-        }
-        else break;
-        if (lastSquare == 1) break;
-        tempStart = targetSquare;
-        if ((shiftAmount & negative) == negative) targetSquare = targetSquare >> (~shiftAmount + 1);
-        else targetSquare = targetSquare << shiftAmount;
-    }
-}
-
 void Chessboard::FindLegalMoves() {
     FindPawnMoves();
     FindKnightMoves();
@@ -173,7 +146,6 @@ void Chessboard::FindPawnMoves() {
                     if (startSquare & Row::Row7) for (int j = Bitmap::WhiteKnight; j < Bitmap::WhiteKing; j++) {
                         LegalMoves[LegalMovesSize].StartSquare = startSquare;
                         LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                        LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                         LegalMoves[LegalMovesSize].PieceType = Bitmap::WhitePawn;
                         LegalMoves[LegalMovesSize].CaptureType = captureType;
                         LegalMoves[LegalMovesSize].PromotionType = j;
@@ -183,7 +155,6 @@ void Chessboard::FindPawnMoves() {
                     else {
                         LegalMoves[LegalMovesSize].StartSquare = startSquare;
                         LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                        LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                         LegalMoves[LegalMovesSize].PieceType = Bitmap::WhitePawn;
                         LegalMoves[LegalMovesSize].CaptureType = captureType;
                         LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -194,7 +165,6 @@ void Chessboard::FindPawnMoves() {
                     if (((targetSquare & ~(Bitmaps[Bitmap::Full])) == targetSquare) && startSquare & Row::Row2) {
                         LegalMoves[LegalMovesSize].StartSquare = startSquare;
                         LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                        LegalMoves[LegalMovesSize].EnPassantTarget = startSquare << 8;
                         LegalMoves[LegalMovesSize].PieceType = Bitmap::WhitePawn;
                         LegalMoves[LegalMovesSize].CaptureType = captureType;
                         LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -208,7 +178,11 @@ void Chessboard::FindPawnMoves() {
                     GetCaptureType(targetSquare);
                     //Promotion
                     if (startSquare & Row::Row7) for (int j = Bitmap::WhiteKnight; j < Bitmap::WhiteKing; j++) {
-                        LegalMoves[LegalMovesSize] = { startSquare, targetSquare, NULL, Bitmap::WhitePawn, captureType, j };
+                        LegalMoves[LegalMovesSize].StartSquare = startSquare;
+                        LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
+                        LegalMoves[LegalMovesSize].PieceType = Bitmap::WhitePawn;
+                        LegalMoves[LegalMovesSize].CaptureType = captureType;
+                        LegalMoves[LegalMovesSize].PromotionType = j;
                         LegalMovesSize++;
                     }
 
@@ -216,7 +190,6 @@ void Chessboard::FindPawnMoves() {
                     else {
                         LegalMoves[LegalMovesSize].StartSquare = startSquare;
                         LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                        LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                         LegalMoves[LegalMovesSize].PieceType = Bitmap::WhitePawn;
                         LegalMoves[LegalMovesSize].CaptureType = captureType;
                         LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -233,7 +206,6 @@ void Chessboard::FindPawnMoves() {
                     if (startSquare & Row::Row7) for (int j = Bitmap::WhiteKnight; j < Bitmap::WhiteKing; j++) {
                         LegalMoves[LegalMovesSize].StartSquare = startSquare;
                         LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                        LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                         LegalMoves[LegalMovesSize].PieceType = Bitmap::WhitePawn;
                         LegalMoves[LegalMovesSize].CaptureType = captureType;
                         LegalMoves[LegalMovesSize].PromotionType = j;
@@ -244,7 +216,6 @@ void Chessboard::FindPawnMoves() {
                     else {
                         LegalMoves[LegalMovesSize].StartSquare = startSquare;
                         LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                        LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                         LegalMoves[LegalMovesSize].PieceType = Bitmap::WhitePawn;
                         LegalMoves[LegalMovesSize].CaptureType = captureType;
                         LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -272,7 +243,6 @@ void Chessboard::FindPawnMoves() {
                     if (startSquare & Row::Row2) for (int j = Bitmap::BlackKnight; j < Bitmap::BlackKing; j++) {
                         LegalMoves[LegalMovesSize].StartSquare = startSquare;
                         LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                        LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                         LegalMoves[LegalMovesSize].PieceType = Bitmap::BlackPawn;
                         LegalMoves[LegalMovesSize].CaptureType = captureType;
                         LegalMoves[LegalMovesSize].PromotionType = j;
@@ -282,7 +252,6 @@ void Chessboard::FindPawnMoves() {
                     else {
                         LegalMoves[LegalMovesSize].StartSquare = startSquare;
                         LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                        LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                         LegalMoves[LegalMovesSize].PieceType = Bitmap::BlackPawn;
                         LegalMoves[LegalMovesSize].CaptureType = captureType;
                         LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -293,7 +262,6 @@ void Chessboard::FindPawnMoves() {
                     if (((targetSquare & ~(Bitmaps[Bitmap::Full])) == targetSquare) && (startSquare & Row::Row7)) {
                         LegalMoves[LegalMovesSize].StartSquare = startSquare;
                         LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                        LegalMoves[LegalMovesSize].EnPassantTarget = startSquare >> 8;
                         LegalMoves[LegalMovesSize].PieceType = Bitmap::BlackPawn;
                         LegalMoves[LegalMovesSize].CaptureType = captureType;
                         LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -309,7 +277,6 @@ void Chessboard::FindPawnMoves() {
                     if (startSquare & Row::Row2) for (int j = Bitmap::BlackKnight; j < Bitmap::BlackKing; j++) {
                         LegalMoves[LegalMovesSize].StartSquare = startSquare;
                         LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                        LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                         LegalMoves[LegalMovesSize].PieceType = Bitmap::BlackPawn;
                         LegalMoves[LegalMovesSize].CaptureType = captureType;
                         LegalMoves[LegalMovesSize].PromotionType = j;
@@ -319,7 +286,6 @@ void Chessboard::FindPawnMoves() {
                     else {
                         LegalMoves[LegalMovesSize].StartSquare = startSquare;
                         LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                        LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                         LegalMoves[LegalMovesSize].PieceType = Bitmap::BlackPawn;
                         LegalMoves[LegalMovesSize].CaptureType = captureType;
                         LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -336,7 +302,6 @@ void Chessboard::FindPawnMoves() {
                     if (startSquare & Row::Row2) for (int j = Bitmap::BlackKnight; j < Bitmap::BlackKing; j++) {
                         LegalMoves[LegalMovesSize].StartSquare = startSquare;
                         LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                        LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                         LegalMoves[LegalMovesSize].PieceType = Bitmap::BlackPawn;
                         LegalMoves[LegalMovesSize].CaptureType = captureType;
                         LegalMoves[LegalMovesSize].PromotionType = j;
@@ -346,7 +311,6 @@ void Chessboard::FindPawnMoves() {
                     else {
                         LegalMoves[LegalMovesSize].StartSquare = startSquare;
                         LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                        LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                         LegalMoves[LegalMovesSize].PieceType = Bitmap::BlackPawn;
                         LegalMoves[LegalMovesSize].CaptureType = captureType;
                         LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -378,7 +342,6 @@ void Chessboard::FindKnightMoves() {
                 GetCaptureType(targetSquare);
                 LegalMoves[LegalMovesSize].StartSquare = startSquare;
                 LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                 LegalMoves[LegalMovesSize].PieceType = Bitmap::WhiteKnight + offSet;
                 LegalMoves[LegalMovesSize].CaptureType = captureType;
                 LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -391,7 +354,6 @@ void Chessboard::FindKnightMoves() {
                 GetCaptureType(targetSquare);
                 LegalMoves[LegalMovesSize].StartSquare = startSquare;
                 LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                 LegalMoves[LegalMovesSize].PieceType = Bitmap::WhiteKnight + offSet;
                 LegalMoves[LegalMovesSize].CaptureType = captureType;
                 LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -404,7 +366,6 @@ void Chessboard::FindKnightMoves() {
                 GetCaptureType(targetSquare);
                 LegalMoves[LegalMovesSize].StartSquare = startSquare;
                 LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                 LegalMoves[LegalMovesSize].PieceType = Bitmap::WhiteKnight + offSet;
                 LegalMoves[LegalMovesSize].CaptureType = captureType;
                 LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -417,7 +378,6 @@ void Chessboard::FindKnightMoves() {
                 GetCaptureType(targetSquare);
                 LegalMoves[LegalMovesSize].StartSquare = startSquare;
                 LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                 LegalMoves[LegalMovesSize].PieceType = Bitmap::WhiteKnight + offSet;
                 LegalMoves[LegalMovesSize].CaptureType = captureType;
                 LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -430,7 +390,6 @@ void Chessboard::FindKnightMoves() {
                 GetCaptureType(targetSquare);
                 LegalMoves[LegalMovesSize].StartSquare = startSquare;
                 LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                 LegalMoves[LegalMovesSize].PieceType = Bitmap::WhiteKnight + offSet;
                 LegalMoves[LegalMovesSize].CaptureType = captureType;
                 LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -443,7 +402,6 @@ void Chessboard::FindKnightMoves() {
                 GetCaptureType(targetSquare);
                 LegalMoves[LegalMovesSize].StartSquare = startSquare;
                 LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                 LegalMoves[LegalMovesSize].PieceType = Bitmap::WhiteKnight + offSet;
                 LegalMoves[LegalMovesSize].CaptureType = captureType;
                 LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -456,7 +414,6 @@ void Chessboard::FindKnightMoves() {
                 GetCaptureType(targetSquare);
                 LegalMoves[LegalMovesSize].StartSquare = startSquare;
                 LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                 LegalMoves[LegalMovesSize].PieceType = Bitmap::WhiteKnight + offSet;
                 LegalMoves[LegalMovesSize].CaptureType = captureType;
                 LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -469,7 +426,6 @@ void Chessboard::FindKnightMoves() {
                 GetCaptureType(targetSquare);
                 LegalMoves[LegalMovesSize].StartSquare = startSquare;
                 LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                 LegalMoves[LegalMovesSize].PieceType = Bitmap::WhiteKnight + offSet;
                 LegalMoves[LegalMovesSize].CaptureType = captureType;
                 LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -480,72 +436,122 @@ void Chessboard::FindKnightMoves() {
 }
 
 void Chessboard::FindBishopMoves() {
-    startSquare;
     int offSet = 0;
-    if (moveSide == 1) offSet = 7;
+    int squareIndex = 0;
+    int magicIndex = 0;
+    u64 sameSideExcluded = 0;
+    if (moveSide == 1)
+    {
+        offSet = 7;
+    }
     for (int i = 0; i < 64; i++)
     {
-        if ((1ULL << i & Bitmaps[Bitmap::WhiteBishop + offSet]))
+        if (1ULL << i & Bitmaps[Bitmap::WhiteBishop + offSet])
         {
-            startSquare = 1ULL << i;
-            //North West
-            FindSlidingMoves(Row::Row8, Column::ColumnA, startSquare << 7, Bitmap::WhiteBishop, 7);
-            //North East
-            FindSlidingMoves(Row::Row8, Column::ColumnH, startSquare << 9, Bitmap::WhiteBishop, 9);
-            //South West
-            FindSlidingMoves(Row::Row1, Column::ColumnA, startSquare >> 9, Bitmap::WhiteBishop, -9);
-            //South East
-            FindSlidingMoves(Row::Row1, Column::ColumnH, startSquare >> 7, Bitmap::WhiteBishop, -7);
+            magicIndex = ((bishopMagics[i] * (Bitmaps[Bitmap::Full] & bishopSight[i])) >> bishopShifts[i]);
+            sameSideExcluded = bishopBlockersMagics[i][magicIndex] & ~Bitmaps[Bitmap::WhiteFull + offSet];
+            for (int j = 0; j < 64; j++)
+            {
+                if (1ULL << j & sameSideExcluded)
+                {
+                    targetSquare = 1ULL << j;
+                    startSquare = 1ULL << i;
+                    GetCaptureType(targetSquare);
+                    LegalMoves[LegalMovesSize].StartSquare = startSquare;
+                    LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
+                    LegalMoves[LegalMovesSize].PieceType = Bitmap::WhiteBishop + offSet;
+                    LegalMoves[LegalMovesSize].CaptureType = captureType;
+                    LegalMoves[LegalMovesSize].PromotionType = 0;
+                    LegalMovesSize++;
+                }
+            }
+
         }
     }
 }
 
 void Chessboard::FindRookMoves() {
-    startSquare = 1ULL;
     int offSet = 0;
-    if (moveSide == 1) offSet = 7;
+    int squareIndex = 0;
+    int magicIndex = 0;
+    u64 sameSideExcluded = 0;
+    if (moveSide == 1)
+    {
+        offSet = 7;
+    }
     for (int i = 0; i < 64; i++)
     {
-        if ((1ULL << i & Bitmaps[Bitmap::WhiteRook + offSet]))
+        if (1ULL << i & Bitmaps[Bitmap::WhiteRook + offSet])
         {
-            startSquare = 1ULL << i;
-            //North
-            FindSlidingMoves(Row::Row8, NULL, startSquare << 8, Bitmap::WhiteRook, 8);
-            //East
-            FindSlidingMoves(NULL, Column::ColumnH, startSquare << 1, Bitmap::WhiteRook, 1);
-            //South
-            FindSlidingMoves(Row::Row1, NULL, startSquare >> 8, Bitmap::WhiteRook, -8);
-            //West
-            FindSlidingMoves(NULL, Column::ColumnA, startSquare >> 1, Bitmap::WhiteRook, -1);
+            magicIndex = ((rookMagics[i] * (Bitmaps[Bitmap::Full] & rookSight[i])) >> rookShifts[i]);
+            sameSideExcluded = rookBlockersMagics[i][magicIndex] & ~Bitmaps[Bitmap::WhiteFull + offSet];
+            for (int j = 0; j < 64; j++)
+            {
+                if (1ULL << j & sameSideExcluded)
+                {
+                    targetSquare = 1ULL << j;
+                    startSquare = 1ULL << i;
+                    GetCaptureType(targetSquare);
+                    LegalMoves[LegalMovesSize].StartSquare = startSquare;
+                    LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
+                    LegalMoves[LegalMovesSize].PieceType = Bitmap::WhiteRook + offSet;
+                    LegalMoves[LegalMovesSize].CaptureType = captureType;
+                    LegalMoves[LegalMovesSize].PromotionType = 0;
+                    LegalMovesSize++;
+                }
+            }
+
         }
     }
 }
 
 void Chessboard::FindQueenMoves() {
-    startSquare = 1ULL;
     int offSet = 0;
-    if (moveSide == 1) offSet = 7;
+    int magicIndex = 0;
+    u64 sameSideExcluded = 0;
+    if (moveSide == 1)
+    {
+        offSet = 7;
+    }
     for (int i = 0; i < 64; i++)
     {
-        if ((1ULL << i & Bitmaps[Bitmap::WhiteQueen + offSet]))
+        if (1ULL << i & Bitmaps[Bitmap::WhiteQueen + offSet])
         {
-            startSquare = 1ULL << i;
-            //North West
-            FindSlidingMoves(Row::Row8, Column::ColumnA, startSquare << 7, Bitmap::WhiteQueen, 7);
-            //North East
-            FindSlidingMoves(Row::Row8, Column::ColumnH, startSquare << 9, Bitmap::WhiteQueen, 9);
-            //South West
-            FindSlidingMoves(Row::Row1, Column::ColumnA, startSquare >> 9, Bitmap::WhiteQueen, -9);
-            //South East
-            FindSlidingMoves(Row::Row1, Column::ColumnH, startSquare >> 7, Bitmap::WhiteQueen, -7);
-            //North
-            FindSlidingMoves(Row::Row8, NULL, startSquare << 8, Bitmap::WhiteQueen, 8);
-            //East
-            FindSlidingMoves(NULL, Column::ColumnH, startSquare << 1, Bitmap::WhiteQueen, 1);
-            //South
-            FindSlidingMoves(Row::Row1, NULL, startSquare >> 8, Bitmap::WhiteQueen, -8);
-            //West
-            FindSlidingMoves(NULL, Column::ColumnA, startSquare >> 1, Bitmap::WhiteQueen, -1);
+            magicIndex = ((bishopMagics[i] * (Bitmaps[Bitmap::Full] & bishopSight[i])) >> bishopShifts[i]);
+            sameSideExcluded = bishopBlockersMagics[i][magicIndex] & ~Bitmaps[Bitmap::WhiteFull + offSet];
+            for (int j = 0; j < 64; j++)
+            {
+                if (1ULL << j & sameSideExcluded)
+                {
+                    targetSquare = 1ULL << j;
+                    startSquare = 1ULL << i;
+                    GetCaptureType(targetSquare);
+                    LegalMoves[LegalMovesSize].StartSquare = startSquare;
+                    LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
+                    LegalMoves[LegalMovesSize].PieceType = Bitmap::WhiteQueen + offSet;
+                    LegalMoves[LegalMovesSize].CaptureType = captureType;
+                    LegalMoves[LegalMovesSize].PromotionType = 0;
+                    LegalMovesSize++;
+                }
+            }
+            magicIndex = ((rookMagics[i] * (Bitmaps[Bitmap::Full] & rookSight[i])) >> rookShifts[i]);
+            sameSideExcluded = rookBlockersMagics[i][magicIndex] & ~Bitmaps[Bitmap::WhiteFull + offSet];
+            for (int j = 0; j < 64; j++)
+            {
+                if (1ULL << j & sameSideExcluded)
+                {
+                    targetSquare = 1ULL << j;
+                    startSquare = 1ULL << i;
+                    GetCaptureType(targetSquare);
+                    LegalMoves[LegalMovesSize].StartSquare = startSquare;
+                    LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
+                    LegalMoves[LegalMovesSize].PieceType = Bitmap::WhiteQueen + offSet;
+                    LegalMoves[LegalMovesSize].CaptureType = captureType;
+                    LegalMoves[LegalMovesSize].PromotionType = 0;
+                    LegalMovesSize++;
+                }
+            }
+
         }
     }
 }
@@ -569,7 +575,6 @@ void Chessboard::FindKingMoves() {
                 GetCaptureType(targetSquare);
                 LegalMoves[LegalMovesSize].StartSquare = startSquare;
                 LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                 LegalMoves[LegalMovesSize].PieceType = Bitmap::WhiteKing + offSet;
                 LegalMoves[LegalMovesSize].CaptureType = captureType;
                 LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -582,7 +587,6 @@ void Chessboard::FindKingMoves() {
                 GetCaptureType(targetSquare);
                 LegalMoves[LegalMovesSize].StartSquare = startSquare;
                 LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                 LegalMoves[LegalMovesSize].PieceType = Bitmap::WhiteKing + offSet;
                 LegalMoves[LegalMovesSize].CaptureType = captureType;
                 LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -595,7 +599,6 @@ void Chessboard::FindKingMoves() {
                 GetCaptureType(targetSquare);
                 LegalMoves[LegalMovesSize].StartSquare = startSquare;
                 LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                 LegalMoves[LegalMovesSize].PieceType = Bitmap::WhiteKing + offSet;
                 LegalMoves[LegalMovesSize].CaptureType = captureType;
                 LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -608,7 +611,6 @@ void Chessboard::FindKingMoves() {
                 GetCaptureType(targetSquare);
                 LegalMoves[LegalMovesSize].StartSquare = startSquare;
                 LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                 LegalMoves[LegalMovesSize].PieceType = Bitmap::WhiteKing + offSet;
                 LegalMoves[LegalMovesSize].CaptureType = captureType;
                 LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -621,7 +623,6 @@ void Chessboard::FindKingMoves() {
                 GetCaptureType(targetSquare);
                 LegalMoves[LegalMovesSize].StartSquare = startSquare;
                 LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                 LegalMoves[LegalMovesSize].PieceType = Bitmap::WhiteKing + offSet;
                 LegalMoves[LegalMovesSize].CaptureType = captureType;
                 LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -634,7 +635,6 @@ void Chessboard::FindKingMoves() {
                 GetCaptureType(targetSquare);
                 LegalMoves[LegalMovesSize].StartSquare = startSquare;
                 LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                 LegalMoves[LegalMovesSize].PieceType = Bitmap::WhiteKing + offSet;
                 LegalMoves[LegalMovesSize].CaptureType = captureType;
                 LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -647,7 +647,6 @@ void Chessboard::FindKingMoves() {
                 GetCaptureType(targetSquare);
                 LegalMoves[LegalMovesSize].StartSquare = startSquare;
                 LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                 LegalMoves[LegalMovesSize].PieceType = Bitmap::WhiteKing + offSet;
                 LegalMoves[LegalMovesSize].CaptureType = captureType;
                 LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -660,7 +659,6 @@ void Chessboard::FindKingMoves() {
                 GetCaptureType(targetSquare);
                 LegalMoves[LegalMovesSize].StartSquare = startSquare;
                 LegalMoves[LegalMovesSize].TargetSquare = targetSquare;
-                LegalMoves[LegalMovesSize].EnPassantTarget = 0;
                 LegalMoves[LegalMovesSize].PieceType = Bitmap::WhiteKing + offSet;
                 LegalMoves[LegalMovesSize].CaptureType = captureType;
                 LegalMoves[LegalMovesSize].PromotionType = 0;
@@ -671,11 +669,11 @@ void Chessboard::FindKingMoves() {
 }
 
 void Chessboard::FindTrueLegalMoves() {
-    unsigned long long tempBitmaps[15] = { Bitmaps[0], Bitmaps[1], Bitmaps[2], Bitmaps[3], Bitmaps[4], Bitmaps[5], Bitmaps[6], Bitmaps[7], Bitmaps[8], Bitmaps[9], Bitmaps[10], Bitmaps[11], Bitmaps[12], Bitmaps[13], Bitmaps[14] };
+    u64 tempBitmaps[15] = { Bitmaps[0], Bitmaps[1], Bitmaps[2], Bitmaps[3], Bitmaps[4], Bitmaps[5], Bitmaps[6], Bitmaps[7], Bitmaps[8], Bitmaps[9], Bitmaps[10], Bitmaps[11], Bitmaps[12], Bitmaps[13], Bitmaps[14] };
 
     startSquare = 1ULL;
     targetSquare = 1ULL;
-    unsigned long long tempStart = 1ULL;
+    u64 tempStart = 1ULL;
     int offSet = 0;
     int kingIndex = 0;
     captureType = -1;
@@ -689,6 +687,7 @@ void Chessboard::FindTrueLegalMoves() {
             break;
         }
     }
+
     for (size_t i = 0; i < LegalMovesSize; i++)
     {
         //For pawn promotion
@@ -962,8 +961,26 @@ void Chessboard::MakeMove(Move move) {
         castlingAbility[0 + moveSide + moveSide] = '-';
         castlingAbility[1 + moveSide + moveSide] = '-';
     }
-    //Update enPassant Target Square
-    enPassantTarget = move.EnPassantTarget;
+    //Update EnPassant Target
+    if (move.PieceType == Bitmap::WhitePawn || move.PieceType == Bitmap::BlackPawn)
+    {
+        if (move.TargetSquare == move.StartSquare << 16)
+        {
+            enPassantTarget = move.StartSquare << 8;
+        }
+        else if (move.TargetSquare == move.StartSquare >> 16)
+        {
+            enPassantTarget = move.StartSquare >> 8;
+        }
+        else
+        {
+            enPassantTarget = 0;
+        }
+    }
+    else
+    {
+        enPassantTarget = 0;
+    }
     //Update Move Side
     if (moveSide == 0) moveSide = 1;
     else moveSide = 0;
@@ -981,7 +998,7 @@ void Chessboard::MakeMove(Move move) {
     Bitmaps[Bitmap::Full] = Bitmaps[Bitmap::WhiteFull] | Bitmaps[Bitmap::BlackFull];
 }
 
-int Chessboard::BitmapToBitindex(unsigned long long bitMap) {
+int Chessboard::BitmapToBitindex(u64 bitMap) {
     int bitIndex = 0;
     while (bitMap != 1)
     {
@@ -989,6 +1006,10 @@ int Chessboard::BitmapToBitindex(unsigned long long bitMap) {
         bitIndex++;
     }
     return bitIndex;
+}
+
+u64 Chessboard::BitIndexToBitmap(int bitIndex) {
+    return 1ULL << bitIndex;
 }
 
 void Chessboard::FindAttackedSquares() {
@@ -1027,19 +1048,18 @@ void Chessboard::FindAttackedSquares() {
 }
 
 void Chessboard::FindCastlingMoves() {
-    unsigned long long whiteKingAttacked = 0b0000000000000000000000000000000000000000000000000000000001110000;
-    unsigned long long whiteQueenAttacked = 0b0000000000000000000000000000000000000000000000000000000000011100;
-    unsigned long long blackKingAttacked = 0b0111000000000000000000000000000000000000000000000000000000000000;
-    unsigned long long blackQueenAttacked = 0b0001110000000000000000000000000000000000000000000000000000000000;
+    u64 whiteKingAttacked = 0b0000000000000000000000000000000000000000000000000000000001110000;
+    u64 whiteQueenAttacked = 0b0000000000000000000000000000000000000000000000000000000000011100;
+    u64 blackKingAttacked = 0b0111000000000000000000000000000000000000000000000000000000000000;
+    u64 blackQueenAttacked = 0b0001110000000000000000000000000000000000000000000000000000000000;
 
-    unsigned long long whiteKingClear = 0b000000000000000000000000000000000000000000000000000000001100000;
-    unsigned long long whiteQueenClear = 0b0000000000000000000000000000000000000000000000000000000000001110;
-    unsigned long long blackKingClear = 0b0110000000000000000000000000000000000000000000000000000000000000;
-    unsigned long long blackQueenClear = 0b0000111000000000000000000000000000000000000000000000000000000000;
+    u64 whiteKingClear = 0b000000000000000000000000000000000000000000000000000000001100000;
+    u64 whiteQueenClear = 0b0000000000000000000000000000000000000000000000000000000000001110;
+    u64 blackKingClear = 0b0110000000000000000000000000000000000000000000000000000000000000;
+    u64 blackQueenClear = 0b0000111000000000000000000000000000000000000000000000000000000000;
     if ((castlingAbility[0] == 'K') && (whiteKingClear & Bitmaps[Bitmap::Full]) == 0 && ((whiteKingAttacked & attackedSquares[1]) == 0) && moveSide == 0 && (Bitmaps[Bitmap::WhiteRook] & (1ULL << 7))) {
         TrueLegalMoves[TrueLegalMovesSize].StartSquare = 1ULL << 4;
         TrueLegalMoves[TrueLegalMovesSize].TargetSquare = 1ULL << 6;
-        TrueLegalMoves[TrueLegalMovesSize].EnPassantTarget = 0;
         TrueLegalMoves[TrueLegalMovesSize].PieceType = Bitmap::WhiteKing;
         TrueLegalMoves[TrueLegalMovesSize].CaptureType = Bitmap::WhiteKing;
         TrueLegalMoves[TrueLegalMovesSize].PromotionType = 0;
@@ -1048,7 +1068,6 @@ void Chessboard::FindCastlingMoves() {
     if ((castlingAbility[1] == 'Q') && (whiteQueenClear & Bitmaps[Bitmap::Full]) == 0 && ((whiteQueenAttacked & attackedSquares[1]) == 0) && moveSide == 0 && (Bitmaps[Bitmap::WhiteRook] & (1ULL))) {
         TrueLegalMoves[TrueLegalMovesSize].StartSquare = 1ULL << 4;
         TrueLegalMoves[TrueLegalMovesSize].TargetSquare = 1ULL << 2;
-        TrueLegalMoves[TrueLegalMovesSize].EnPassantTarget = 0;
         TrueLegalMoves[TrueLegalMovesSize].PieceType = Bitmap::WhiteKing;
         TrueLegalMoves[TrueLegalMovesSize].CaptureType = Bitmap::WhiteKing;
         TrueLegalMoves[TrueLegalMovesSize].PromotionType = 0;
@@ -1057,7 +1076,6 @@ void Chessboard::FindCastlingMoves() {
     if ((castlingAbility[2] == 'k') && (blackKingClear & Bitmaps[Bitmap::Full]) == 0 && ((blackKingAttacked & attackedSquares[0]) == 0) && moveSide == 1 && (Bitmaps[Bitmap::BlackRook] & (1ULL << 63))) {
         TrueLegalMoves[TrueLegalMovesSize].StartSquare = 1ULL << 60;
         TrueLegalMoves[TrueLegalMovesSize].TargetSquare = 1ULL << 62;
-        TrueLegalMoves[TrueLegalMovesSize].EnPassantTarget = 0;
         TrueLegalMoves[TrueLegalMovesSize].PieceType = Bitmap::BlackKing;
         TrueLegalMoves[TrueLegalMovesSize].CaptureType = Bitmap::BlackKing;
         TrueLegalMoves[TrueLegalMovesSize].PromotionType = 0;
@@ -1066,7 +1084,6 @@ void Chessboard::FindCastlingMoves() {
     if ((castlingAbility[3] == 'q') && (blackQueenClear & Bitmaps[Bitmap::Full]) == 0 && ((blackQueenAttacked & attackedSquares[0]) == 0) && moveSide == 1 && (Bitmaps[Bitmap::BlackRook] & (1ULL << 56))) {
         TrueLegalMoves[TrueLegalMovesSize].StartSquare = 1ULL << 60;
         TrueLegalMoves[TrueLegalMovesSize].TargetSquare = 1ULL << 58;
-        TrueLegalMoves[TrueLegalMovesSize].EnPassantTarget = 0;
         TrueLegalMoves[TrueLegalMovesSize].PieceType = Bitmap::BlackKing;
         TrueLegalMoves[TrueLegalMovesSize].CaptureType = Bitmap::BlackKing;
         TrueLegalMoves[TrueLegalMovesSize].PromotionType = 0;
@@ -1074,7 +1091,7 @@ void Chessboard::FindCastlingMoves() {
     }
 }
 
-void Chessboard::GetCaptureType(unsigned long long targetSquare) {
+void Chessboard::GetCaptureType(u64 targetSquare) {
     int offset = 0;
     captureType = -1;
     lastSquare = 0;
@@ -1090,5 +1107,3 @@ void Chessboard::GetCaptureType(unsigned long long targetSquare) {
     }
     return;
 }
-
-

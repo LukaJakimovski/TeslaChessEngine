@@ -1,4 +1,5 @@
 #pragma once
+using u64 = unsigned long long;
 namespace Bitmap {
     enum Bitmap : int {
         WhitePawn = 0,
@@ -21,7 +22,7 @@ namespace Bitmap {
     };
 }
 namespace Row {
-    enum Row : unsigned long long {
+    enum Row : u64 {
         Row1 = 0b0000000000000000000000000000000000000000000000000000000011111111,
         Row2 = Row1 << 8,
         Row3 = Row2 << 8,
@@ -33,7 +34,7 @@ namespace Row {
     };
 }
 namespace Column {
-    enum Column : unsigned long long {
+    enum Column : u64 {
         ColumnA = 0b0000000100000001000000010000000100000001000000010000000100000001,
         ColumnB = ColumnA << 1,
         ColumnC = ColumnB << 1,

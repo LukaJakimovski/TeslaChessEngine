@@ -1,11 +1,12 @@
 #pragma once
 #include <string>
+
+using u64 = unsigned long long;
 class Move
 {
 public:
-	unsigned long long StartSquare;
-	unsigned long long TargetSquare;
-	unsigned long long EnPassantTarget;
+	u64 StartSquare;
+	u64 TargetSquare;
 	int PieceType;
 	int CaptureType;
 	int PromotionType;

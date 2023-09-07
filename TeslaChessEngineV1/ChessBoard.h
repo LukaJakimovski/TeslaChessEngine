@@ -1,10 +1,12 @@
 #pragma once
 #include "Move.h"
-#include <vector>
 #include <string>
+
+using u64 = unsigned long long;
 class Chessboard {
 
 public:
+    
     Chessboard();
     char castlingAbility[4];
     bool moveSide = 0;
@@ -12,16 +14,15 @@ public:
     int fullMoveClock;
 
     //Move Containers;
-    Move* LegalMoves = new Move[218];
+    Move* LegalMoves = new Move[300];
     int LegalMovesSize = 0;
-    Move* TrueLegalMoves = new Move[218];
+    Move* TrueLegalMoves = new Move[300];
     int TrueLegalMovesSize = 0;
 
     //Bitmaps
-    unsigned long long enPassantTarget;
-    unsigned long long Bitmaps[15];
-    unsigned long long attackedSquares[2];
-
+    u64 enPassantTarget;
+    u64 Bitmaps[15];
+    u64 attackedSquares[2];
 
     //Functions that Find Moves
     void FindPawnMoves();
@@ -35,13 +36,21 @@ public:
     void FindAttackedSquares();
     void FindCastlingMoves();
     void FindAllMoves();
-    void FindSlidingMoves(unsigned long long rowConstraint, unsigned long long columnConstraint, unsigned long long targetSquare, int movePiece, int shiftAmount);
+    void FindSlidingMoves(u64 rowConstraint, u64 columnConstraint, u64 targetSquare, int movePiece, int shiftAmount);
+    
+    void CreateRookBitmaps();
+    void CreateBishopBitmaps();
 
+
+    void FindMagicRookMoves();
+    void FindMagicBishopMoves();
+    void FindMagicQueenMoves();
     //Important functions for the engine.
     void LoadPosition(std::string FEN);
     void MakeMove(Move move);
 
     //Functions which return useful data for variables and such
-    static int BitmapToBitindex(unsigned long long Bitmap);
-    void GetCaptureType(unsigned long long targetSquare);
+    static int BitmapToBitindex(u64 Bitmap);
+    static u64 BitIndexToBitmap(int bitIndex);
+    void GetCaptureType(u64 targetSquare);
 };
