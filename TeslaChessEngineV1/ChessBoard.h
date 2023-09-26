@@ -36,15 +36,14 @@ public:
     void FindAttackedSquares();
     void FindCastlingMoves();
     void FindAllMoves();
-    void FindSlidingMoves(u64 rowConstraint, u64 columnConstraint, u64 targetSquare, int movePiece, int shiftAmount);
     
+    int CheckGameState();
+
     void CreateRookBitmaps();
     void CreateBishopBitmaps();
-
-
-    void FindMagicRookMoves();
-    void FindMagicBishopMoves();
-    void FindMagicQueenMoves();
+    std::string GenerateFENString();
+    std::string GenerateBoardDisplay();
+    int FindMoveIndexFromPGN(std::string PGN);
     //Important functions for the engine.
     void LoadPosition(std::string FEN);
     void MakeMove(Move move);

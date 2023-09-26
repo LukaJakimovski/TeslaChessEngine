@@ -1,4 +1,6 @@
 #pragma once
+#include <unordered_map>
+#include <string>
 using u64 = unsigned long long;
 namespace Bitmap {
     enum Bitmap : int {
@@ -45,3 +47,23 @@ namespace Column {
         ColumnH = ColumnG << 1
     };
 }
+
+namespace PieceChar {
+    enum PieceChar : char {
+        WhitePawn = 'P',
+        WhiteKnight = 'N',
+        WhiteBishop = 'B',
+        WhiteRook = 'R',
+        WhiteQueen = 'Q',
+        WhiteKing = 'K',
+
+        BlackPawn = 'p',
+        BlackKnight = 'n',
+        BlackBishop = 'b',
+        BlackRook = 'r',
+        BlackQueen = 'q',
+        BlackKing = 'k'
+    };
+}
+
+

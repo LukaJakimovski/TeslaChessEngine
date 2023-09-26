@@ -732,6 +732,7 @@ void Chessboard::FindTrueLegalMoves() {
             if (lastSquare == 1)
             {
                 if (captureType == Bitmap::WhiteBishop + 7 - offSet || captureType == Bitmap::WhiteQueen + 7 - offSet) goto False;
+                if (tempStart == startSquare && captureType == Bitmap::WhiteKing + 7 - offSet) goto False;
                 else break;
             }
             tempStart = targetSquare;
@@ -750,6 +751,7 @@ void Chessboard::FindTrueLegalMoves() {
             if (lastSquare == 1)
             {
                 if (captureType == Bitmap::WhiteBishop + 7 - offSet || captureType == Bitmap::WhiteQueen + 7 - offSet) goto False;
+                if (tempStart == startSquare && captureType == Bitmap::WhiteKing + 7 - offSet) goto False;
                 else break;
             }
             tempStart = targetSquare;
@@ -768,6 +770,7 @@ void Chessboard::FindTrueLegalMoves() {
             if (lastSquare == 1)
             {
                 if (captureType == Bitmap::WhiteBishop + 7 - offSet || captureType == Bitmap::WhiteQueen + 7 - offSet) goto False;
+                if (tempStart == startSquare && captureType == Bitmap::WhiteKing + 7 - offSet) goto False;
                 else break;
             }
             tempStart = targetSquare;
@@ -786,6 +789,7 @@ void Chessboard::FindTrueLegalMoves() {
             if (lastSquare == 1)
             {
                 if (captureType == Bitmap::WhiteBishop + 7 - offSet || captureType == Bitmap::WhiteQueen + 7 - offSet) goto False;
+                if (tempStart == startSquare && captureType == Bitmap::WhiteKing + 7 - offSet) goto False;
                 else break;
             }
             tempStart = targetSquare;
@@ -805,6 +809,7 @@ void Chessboard::FindTrueLegalMoves() {
             if (lastSquare == 1)
             {
                 if (captureType == Bitmap::WhiteRook + 7 - offSet || captureType == Bitmap::WhiteQueen + 7 - offSet) goto False;
+                if (tempStart == startSquare && captureType == Bitmap::WhiteKing + 7 - offSet) goto False;
                 else break;
             }
             tempStart = targetSquare;
@@ -823,6 +828,7 @@ void Chessboard::FindTrueLegalMoves() {
             if (lastSquare == 1)
             {
                 if (captureType == Bitmap::WhiteRook + 7 - offSet || captureType == Bitmap::WhiteQueen + 7 - offSet) goto False;
+                if (tempStart == startSquare && captureType == Bitmap::WhiteKing + 7 - offSet) goto False;
                 else break;
             }
             tempStart = targetSquare;
@@ -841,6 +847,7 @@ void Chessboard::FindTrueLegalMoves() {
             if (lastSquare == 1)
             {
                 if (captureType == Bitmap::WhiteRook + 7 - offSet || captureType == Bitmap::WhiteQueen + 7 - offSet) goto False;
+                if (tempStart == startSquare && captureType == Bitmap::WhiteKing + 7 - offSet) goto False;
                 else break;
             }
             tempStart = targetSquare;
@@ -859,6 +866,7 @@ void Chessboard::FindTrueLegalMoves() {
             if (lastSquare == 1)
             {
                 if (captureType == Bitmap::WhiteRook + 7 - offSet || captureType == Bitmap::WhiteQueen + 7 - offSet) goto False;
+                if (tempStart == startSquare && captureType == Bitmap::WhiteKing + 7 - offSet) goto False;
                 else break;
             }
             tempStart = targetSquare;
@@ -1000,6 +1008,10 @@ void Chessboard::MakeMove(Move move) {
 
 int Chessboard::BitmapToBitindex(u64 bitMap) {
     int bitIndex = 0;
+    if (bitMap == 0)
+    {
+        return 0;
+    }
     while (bitMap != 1)
     {
         bitMap = bitMap >> 1;
@@ -1106,4 +1118,176 @@ void Chessboard::GetCaptureType(u64 targetSquare) {
         }
     }
     return;
+}
+
+int Chessboard::CheckGameState() {
+    //Game Not Over = 0; White Wins = 1; Black Wins = 2; Draw Via Stalemate = 3; Draw Via Repetition = 4; Draw Via 50 Move Rule = 5;
+    if (TrueLegalMovesSize == 0 && moveSide == 1 && attackedSquares[0] & Bitmaps[Bitmap::BlackKing])
+    {
+        return 1;
+    }
+    else if (TrueLegalMovesSize == 0 && moveSide == 0 && attackedSquares[1] & Bitmaps[Bitmap::WhiteKing])
+    {
+        return 2;
+    }
+    else if (TrueLegalMovesSize == 0) {
+        return 3;
+    }
+    else if (false) {
+        return 4;
+    }
+    else if (halfMoveClock >= 100)
+    {
+        return 5;
+    }
+    else
+    {
+        return 0;
+    }
+   
+}
+
+std::string Chessboard::GenerateBoardDisplay() {
+    std::string fen = GenerateFENString();
+    std::string returnString = "+---+---+---+---+---+---+---+---+\n";
+    int index = 0;
+    int squaresWritten = 0;
+    while (squaresWritten < 64)
+    {
+        if (fen[index] > '0' && fen[index] < '9')
+        {
+            for (int i = 0; i < fen[index] - '0'; i++)
+            {
+                returnString.append("|   ");
+                squaresWritten++;
+            }
+            index++;
+        }
+        returnString.append("|");
+        returnString.append(" ");
+        if (fen[index] == '/')
+        {
+            returnString += std::to_string(9 - squaresWritten / 8) + "\n";
+            returnString += "+---+---+---+---+---+---+---+---+\n";
+        }
+        else
+        {
+            returnString.push_back(fen[index]);
+            returnString.append(" ");
+            squaresWritten++;
+        }
+        index++;
+    }
+    returnString.append("| 1\n+---+---+---+---+---+---+---+---+\n  a   b   c   d   e   f   g   h\n\nFEN: " + fen + "\n");
+    return returnString;
+}
+
+std::string Chessboard::GenerateFENString() {
+    std::unordered_map<int, std::string > PieceChars = { {Bitmap::WhitePawn, "P"}, {Bitmap::WhiteKnight, "N"}, {Bitmap::WhiteBishop, "B"}, {Bitmap::WhiteRook, "R"}, {Bitmap::WhiteQueen, "Q"},
+{Bitmap::WhiteKing, "K"}, {Bitmap::BlackPawn, "p"}, {Bitmap::BlackKnight, "n"}, {Bitmap::BlackBishop, "b"}, {Bitmap::BlackRook, "r"}, {Bitmap::BlackQueen, "q"}, {Bitmap::BlackKing, "k"} };
+    std::string returnString;
+    int index = 56;
+    int blankSpaces = 0;
+    int includedValue = 0;
+    std::string tempStr = "\0";
+    while (true)
+    {
+        includedValue = 0;
+        for (int i = Bitmap::WhitePawn; i <= Bitmap::WhiteKing; i++)
+        {
+            if (1ULL << index & Bitmaps[i])
+            {
+                if (blankSpaces != 0)
+                {
+                    returnString.append(std::to_string(blankSpaces));
+                    blankSpaces = 0;
+                }
+                returnString.append(PieceChars[i]);
+                includedValue = 1;
+            }
+        }
+        for (int i = Bitmap::BlackPawn; i <= Bitmap::BlackKing; i++)
+        {
+            if (1ULL << index & Bitmaps[i])
+            {
+                if (blankSpaces != 0)
+                {
+                    returnString.append(std::to_string(blankSpaces));
+                    blankSpaces = 0;
+                }
+                returnString.append(PieceChars[i]);
+                includedValue = 1;
+            }
+        }
+        if (includedValue == 0)
+        {
+            blankSpaces++;
+        }
+        index++;
+        if (index % 8 == 0)
+        {
+            if (index == 8)
+            {
+                break;
+            }
+            index -= 16;
+            if (blankSpaces != 0)
+            {
+
+                returnString.append(std::to_string(blankSpaces));
+                blankSpaces = 0;
+            }
+            returnString.append("/");
+        }
+    }
+    returnString.append(" ");
+    if (moveSide == 1)
+    {
+        returnString.append("b");
+    }
+    else
+    {
+        returnString.append("w");
+    }
+    returnString.append(" ");
+    for (int i = 0; i < 4; i++)
+    {
+        if (castlingAbility[i] != '-')
+        {
+            tempStr += castlingAbility[i];
+        }
+    }
+    if (tempStr == "\0")
+    {
+        tempStr = "-";
+    }
+    returnString.append(tempStr);
+    returnString.append(" ");
+    tempStr = Move::GetMoveString(enPassantTarget, 0);
+    if (enPassantTarget == 0)
+    {
+        tempStr = "-";
+    }
+    else
+    {
+        tempStr.resize(2);
+    }
+    returnString.append(tempStr);
+    returnString.append(" ");
+    returnString.append(std::to_string(halfMoveClock));
+    returnString.append(" ");
+    returnString.append(std::to_string(fullMoveClock));
+    return returnString;
+}
+
+int Chessboard::FindMoveIndexFromPGN(std::string PGN) {
+    for (int i = 0; i < TrueLegalMovesSize; i++)
+    {
+        if (PGN == TrueLegalMoves[i].GetLongMoveString())
+        {
+            return i;
+        }
+        
+    }
+    return -1;
 }

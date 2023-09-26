@@ -6,10 +6,10 @@ char moveStrings[64][3] = { "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "a2"
 
 std::string Move::GetMoveString(int startIndex, int targetIndex) {
 	std::string MoveString(5, '\0');
-	MoveString[0] = moveStrings[startIndex][0];
-	MoveString[1] = moveStrings[startIndex][1];
-	MoveString[2] = moveStrings[targetIndex][0];
-	MoveString[3] = moveStrings[targetIndex][1];
+	MoveString[0] = moveStrings[Chessboard::BitmapToBitindex(startIndex)][0];
+	MoveString[1] = moveStrings[Chessboard::BitmapToBitindex(startIndex)][1];
+	MoveString[2] = moveStrings[Chessboard::BitmapToBitindex(targetIndex)][0];
+	MoveString[3] = moveStrings[Chessboard::BitmapToBitindex(targetIndex)][1];
 	MoveString[4] = '\0';
 	return MoveString;
 }
@@ -24,5 +24,74 @@ std::string Move::GetMoveString(int startIndex, int targetIndex, int promotionTy
 		MoveString[4] = 'r';
 	else if (promotionType == Bitmap::WhiteQueen || promotionType == Bitmap::BlackQueen)
 		MoveString[4] = 'q';
+	return MoveString;
+}
+
+
+std::string Move::GetLongMoveString(int startIndex, int targetIndex, int pieceType, int promotionType) {
+	std::string MoveString(5, '\0');
+	int stringStartIndex = 0;
+	if (pieceType != Bitmap::WhitePawn && pieceType != Bitmap::BlackPawn)
+	{
+		if (pieceType == Bitmap::WhiteKnight || pieceType == Bitmap::BlackKnight)
+			MoveString[0] = 'N';
+		else if (pieceType == Bitmap::WhiteBishop || pieceType == Bitmap::BlackBishop)
+			MoveString[0] = 'B';
+		else if (pieceType == Bitmap::WhiteRook || pieceType == Bitmap::BlackRook)
+			MoveString[0] = 'R';
+		else if (pieceType == Bitmap::WhiteQueen || pieceType == Bitmap::BlackQueen)
+			MoveString[0] = 'Q';
+		else if (pieceType == Bitmap::WhiteKing || pieceType == Bitmap::BlackKing)
+			MoveString[0] = 'K';
+		stringStartIndex = 1;
+	}
+	MoveString[0 + stringStartIndex] = moveStrings[Chessboard::BitmapToBitindex(startIndex)][0];
+	MoveString[1 + stringStartIndex] = moveStrings[Chessboard::BitmapToBitindex(startIndex)][1];
+	MoveString[2 + stringStartIndex] = moveStrings[Chessboard::BitmapToBitindex(targetIndex)][0];
+	MoveString[3 + stringStartIndex] = moveStrings[Chessboard::BitmapToBitindex(targetIndex)][1];
+	if (promotionType == Bitmap::WhiteKnight || promotionType == Bitmap::BlackKnight)
+		MoveString[4] = 'n';
+	else if (promotionType == Bitmap::WhiteBishop || promotionType == Bitmap::BlackBishop)
+		MoveString[4] = 'b';
+	else if (promotionType == Bitmap::WhiteRook || promotionType == Bitmap::BlackRook)
+		MoveString[4] = 'r';
+	else if (promotionType == Bitmap::WhiteQueen || promotionType == Bitmap::BlackQueen)
+		MoveString[4] = 'q';
+	else
+		MoveString.resize(4);
+	return MoveString;
+}
+
+std::string Move::GetLongMoveString() {
+	std::string MoveString(5, '\0');
+	int stringStartIndex = 0;
+	if (PieceType != Bitmap::WhitePawn && PieceType != Bitmap::BlackPawn)
+	{
+		if (PieceType == Bitmap::WhiteKnight || PieceType == Bitmap::BlackKnight)
+			MoveString[0] = 'N';
+		else if (PieceType == Bitmap::WhiteBishop || PieceType == Bitmap::BlackBishop)
+			MoveString[0] = 'B';
+		else if (PieceType == Bitmap::WhiteRook || PieceType == Bitmap::BlackRook)
+			MoveString[0] = 'R';
+		else if (PieceType == Bitmap::WhiteQueen || PieceType == Bitmap::BlackQueen)
+			MoveString[0] = 'Q';
+		else if (PieceType == Bitmap::WhiteKing || PieceType == Bitmap::BlackKing)
+			MoveString[0] = 'K';
+		stringStartIndex = 1;
+	}
+	MoveString[0 + stringStartIndex] = moveStrings[Chessboard::BitmapToBitindex(StartSquare)][0];
+	MoveString[1 + stringStartIndex] = moveStrings[Chessboard::BitmapToBitindex(StartSquare)][1];
+	MoveString[2 + stringStartIndex] = moveStrings[Chessboard::BitmapToBitindex(TargetSquare)][0];
+	MoveString[3 + stringStartIndex] = moveStrings[Chessboard::BitmapToBitindex(TargetSquare)][1];
+	if (PromotionType == Bitmap::WhiteKnight || PromotionType == Bitmap::BlackKnight)
+		MoveString[4] = 'N';
+	else if (PromotionType == Bitmap::WhiteBishop || PromotionType == Bitmap::BlackBishop)
+		MoveString[4] = 'B';
+	else if (PromotionType == Bitmap::WhiteRook || PromotionType == Bitmap::BlackRook)
+		MoveString[4] = 'R';
+	else if (PromotionType == Bitmap::WhiteQueen || PromotionType == Bitmap::BlackQueen)
+		MoveString[4] = 'Q';
+	else if (!(stringStartIndex))
+		MoveString.resize(4);
 	return MoveString;
 }

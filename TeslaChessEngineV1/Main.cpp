@@ -1,5 +1,6 @@
 #include <iostream>
 #include <chrono>
+#include <random>
 #include <vector>
 #include "ChessBoard.h"
 #include "Enums.h"
@@ -31,10 +32,10 @@ u64 DividePerft(int depth, Chessboard board)
         run = 1;
         for (int i = 0; i < trueSize; i++)
         {
-            strings[i] = board.TrueLegalMoves[i].GetMoveString(Chessboard::BitmapToBitindex(board.TrueLegalMoves[i].StartSquare), Chessboard::BitmapToBitindex(board.TrueLegalMoves[i].TargetSquare), board.TrueLegalMoves[i].PromotionType);
+            strings[i] = board.TrueLegalMoves[i].GetMoveString(board.TrueLegalMoves[i].StartSquare, board.TrueLegalMoves[i].TargetSquare, board.TrueLegalMoves[i].PromotionType);
 
             if (globalDepth == 1) {
-                std::cout << board.TrueLegalMoves[i].GetMoveString(Chessboard::BitmapToBitindex(board.TrueLegalMoves[i].StartSquare), Chessboard::BitmapToBitindex(board.TrueLegalMoves[i].TargetSquare), board.TrueLegalMoves[i].PromotionType) << ": 1";
+                std::cout << board.TrueLegalMoves[i].GetMoveString(board.TrueLegalMoves[i].StartSquare, board.TrueLegalMoves[i].TargetSquare, board.TrueLegalMoves[i].PromotionType) << ": 1";
                 std::cout << "\n";
             }
         }
@@ -52,6 +53,7 @@ u64 DividePerft(int depth, Chessboard board)
     delete[] TrueMoves;
     return nodes;
 }
+
 u64 BasicPerft(int depth, Chessboard board) {
     board.FindAllMoves();
     if (depth == 1) return board.TrueLegalMovesSize;
@@ -74,8 +76,7 @@ u64 BasicPerft(int depth, Chessboard board) {
     return nodes;
 }
 
-int main()
-{
+void MoveGenSpeedTest() {
     int depth = 3;
     u64 nodes = 0;
     u64 expected = 0;
@@ -90,11 +91,7 @@ int main()
     auto totalEnd = std::chrono::high_resolution_clock::now();
     auto totalDuration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
-    InitialiseMagicArrays();
-
     totalStart = std::chrono::high_resolution_clock::now();
-
-    
     //Position 1
     depth = 5;
     expected = 4865609;
@@ -110,7 +107,7 @@ int main()
     std::cout << "Nodes Counted: " << nodes << " Expected Nodes: " << expected << " Position FEN: " << position << " Depth: " << depth << " Time Spent " << duration.count() << " microseconds";
     if (expected == nodes) std::cout << " PASSED\n";
     else std::cout << " FAILED\n";
-    
+
     //Position 2
     depth = 4;
     expected = 4085603;
@@ -126,7 +123,7 @@ int main()
     std::cout << "Nodes Counted: " << nodes << " Expected Nodes: " << expected << " Position FEN: " << position << " Depth: " << depth << " Time Spent " << duration.count() << " microseconds";
     if (expected == nodes) std::cout << " PASSED\n";
     else std::cout << " FAILED\n";
-    
+
     //Position 3
     depth = 6;
     expected = 11030083;
@@ -142,7 +139,7 @@ int main()
     std::cout << "Nodes Counted: " << nodes << " Expected Nodes: " << expected << " Position FEN: " << position << " Depth: " << depth << " Time Spent " << duration.count() << " microseconds";
     if (expected == nodes) std::cout << " PASSED\n";
     else std::cout << " FAILED\n";
-    
+
     //Position 4
     depth = 5;
     expected = 15833292;
@@ -190,9 +187,71 @@ int main()
     std::cout << "Nodes Counted: " << nodes << " Expected Nodes: " << expected << " Position FEN: " << position << " Depth: " << depth << " Time Spent " << duration.count() << " microseconds";
     if (expected == nodes) std::cout << " PASSED\n";
     else std::cout << " FAILED\n";
-    
+
     totalEnd = std::chrono::high_resolution_clock::now();
     totalDuration = std::chrono::duration_cast<std::chrono::microseconds>(totalEnd - totalStart);
     std::cout << "\nTotal time elapsed: " << totalDuration.count() << " microseconds";
-    std::cin >> nodes;
+}
+
+int GenerateRandom(int lowerBound, int upperBound) {
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_int_distribution<int> distribution(lowerBound, upperBound);
+    return distribution(mt);
+}
+
+std::string PlayGameAIAI(std::string startPosition) {
+    Chessboard board;
+    int moveIndex;
+    std::string movePGN;
+    std::string gamePGN;
+    board.LoadPosition(startPosition);
+    while (true)
+    {
+        board.FindAllMoves();
+        if (board.CheckGameState() != 0)
+            break;
+        moveIndex = GenerateRandom(0, board.TrueLegalMovesSize - 1);
+        movePGN = board.TrueLegalMoves[moveIndex].GetLongMoveString();
+        gamePGN += movePGN + " ";
+        board.MakeMove(board.TrueLegalMoves[moveIndex]);
+    }
+    return gamePGN;
+}
+
+std::string PlayGame(std::string startPosition) {
+    std::string GamePGN;
+    std::string PlayerMove = "\0\0\0\0\0";
+    int playerMoveIndex = -1;
+    Chessboard board;
+    board.LoadPosition(startPosition);
+    while (true)
+    {
+        playerMoveIndex = -1;
+        board.FindAllMoves();
+        if (board.CheckGameState() != 0)
+        {
+            std::cout << "GAME OVER\n";
+            break;
+        }
+        std::cout << board.GenerateBoardDisplay();
+        while (playerMoveIndex == -1)
+        {
+            std::cin >> PlayerMove;
+            playerMoveIndex = board.FindMoveIndexFromPGN(PlayerMove);
+            if (playerMoveIndex == -1)
+            {
+                std::cout << "Invalid Move Try Again\n";
+            }
+        }
+        GamePGN += PlayerMove + " ";
+        board.MakeMove(board.TrueLegalMoves[playerMoveIndex]);
+    }
+    return GamePGN;
+}
+
+int main()
+{
+    InitialiseMagicArrays();
+    std::cout << PlayGameAIAI("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0");
 }

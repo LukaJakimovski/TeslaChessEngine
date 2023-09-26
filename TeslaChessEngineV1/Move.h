@@ -10,7 +10,9 @@ public:
 	int PieceType;
 	int CaptureType;
 	int PromotionType;
-	std::string GetMoveString(int startIndex, int targetIndex, int promotionType);
-	std::string GetMoveString(int startIndex, int targetIndex);
+	static std::string GetMoveString(int startIndex, int targetIndex, int promotionType);
+	static std::string GetMoveString(int startIndex, int targetIndex);
+	static std::string GetLongMoveString(int startIndex, int targetIndex, int pieceType, int promotionType);
+	std::string GetLongMoveString();
 };
 
