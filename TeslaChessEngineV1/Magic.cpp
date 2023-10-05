@@ -55,6 +55,42 @@ void Chessboard::CreateRookBitmaps() {
     rookBitmaps.close();
 }
 
+void Chessboard::CreateKingBitmaps() {
+    std::ofstream kingBitmaps("kingBitmaps.txt");
+    u64 attacked = 0;
+    for (int i = 0; i < 64; i++)
+    {
+        attacked = 0;
+        Bitmaps[Bitmap::WhiteKing] = 1ULL << i;
+        FindKingMoves();
+        for (int i = 0; i < LegalMovesSize; i++)
+        {
+            attacked |= LegalMoves[i].TargetSquare;
+        }
+        LegalMovesSize = 0;
+        kingBitmaps << attacked << ", ";
+    }
+    kingBitmaps.close();
+}
+
+void Chessboard::CreateKnightBitmaps() {
+    std::ofstream knightBitmaps("knightBitmaps.txt");
+    u64 attacked = 0;
+    for (int i = 0; i < 64; i++)
+    {
+        attacked = 0;
+        Bitmaps[Bitmap::WhiteKnight] = 1ULL << i;
+        FindKnightMoves();
+        for (int i = 0; i < LegalMovesSize; i++)
+        {
+            attacked |= LegalMoves[i].TargetSquare;
+        }
+        LegalMovesSize = 0;
+        knightBitmaps << attacked << ", ";
+    }
+    knightBitmaps.close();
+}
+
 void Chessboard::CreateBishopBitmaps() {
     std::ofstream bishopBitmaps("bishopBitmaps.txt");
     u64 attacked = 0;
@@ -247,7 +283,6 @@ u64* CreatePossibleBishopBlockers(int squareIndex) {
         bishopAttack[i] = bitmap;
         bitmap = 0ULL;
     }
-    //rookAttack[2175];
     return bishopAttack;
 }
 

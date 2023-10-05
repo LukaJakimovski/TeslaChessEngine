@@ -27,7 +27,23 @@ std::string Move::GetMoveString(int startIndex, int targetIndex, int promotionTy
 	return MoveString;
 }
 
-
+std::string Move::GetMoveString() {
+	std::string MoveString(5, '\0');
+	MoveString[0] = moveStrings[Chessboard::BitmapToBitindex(StartSquare)][0];
+	MoveString[1] = moveStrings[Chessboard::BitmapToBitindex(StartSquare)][1];
+	MoveString[2] = moveStrings[Chessboard::BitmapToBitindex(TargetSquare)][0];
+	MoveString[3] = moveStrings[Chessboard::BitmapToBitindex(TargetSquare)][1];
+	MoveString[4] = '\0';
+	if (PromotionType == Bitmap::WhiteKnight || PromotionType == Bitmap::BlackKnight)
+		MoveString[4] = 'n';
+	else if (PromotionType == Bitmap::WhiteBishop || PromotionType == Bitmap::BlackBishop)
+		MoveString[4] = 'b';
+	else if (PromotionType == Bitmap::WhiteRook || PromotionType == Bitmap::BlackRook)
+		MoveString[4] = 'r';
+	else if (PromotionType == Bitmap::WhiteQueen || PromotionType == Bitmap::BlackQueen)
+		MoveString[4] = 'q';
+	return MoveString;
+}
 std::string Move::GetLongMoveString(int startIndex, int targetIndex, int pieceType, int promotionType) {
 	std::string MoveString(5, '\0');
 	int stringStartIndex = 0;
@@ -95,3 +111,13 @@ std::string Move::GetLongMoveString() {
 		MoveString.resize(4);
 	return MoveString;
 }
+
+Move::Move() {
+	u64 StartSquare = 0;
+	u64 TargetSquare = 0;
+	int PieceType = 0;
+	int CaptureType = 0;
+	int PromotionType = 0;
+	int MoveGuessScore = 0;
+}
+
