@@ -996,6 +996,10 @@ void Chessboard::MakeMove(Move move) {
 
 unsigned long Chessboard::BitmapToBitindex(u64 bitMap) {
     unsigned long bitIndex = 0;
+    if (bitMap == 0)
+    {
+        return 0;
+    }
     _BitScanReverse64(&bitIndex, bitMap);
     return bitIndex;
 }

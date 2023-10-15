@@ -57,5 +57,7 @@ public:
     static u64 BitIndexToBitmap(int bitIndex);
     void GetCaptureType(u64 targetSquare);
     int Evaluate();
+    int CountPieces();
+    int PieceLocations();
     void OrderMoves();
 };

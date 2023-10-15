@@ -12,6 +12,7 @@ public:
 	int CaptureType;
 	int PromotionType;
 	int MoveScoreGuess;
+	Move(u64 startSquare, u64 targetSquare, int pieceType, int captureType, int promotionType, int moveScoreGuess);
 	static std::string GetMoveString(int startIndex, int targetIndex, int promotionType);
 	static std::string GetMoveString(int startIndex, int targetIndex);
 	std::string GetMoveString();

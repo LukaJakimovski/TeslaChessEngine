@@ -1,7 +1,6 @@
 #include <iostream>
 #include <chrono>
 #include <random>
-#include <vector>
 #include "ChessBoard.h"
 #include "Enums.h"
 #include "Magic.h"
@@ -59,13 +58,9 @@ u64 BasicPerft(int depth, Chessboard board) {
     board.FindAllMoves();
     if (depth == 1) return board.TrueLegalMovesSize;
     Chessboard boardCopy = board;
-
     Move* TrueMoves = new Move[board.TrueLegalMovesSize];
     int trueSize = board.TrueLegalMovesSize;
-    for (int i = 0; i < board.TrueLegalMovesSize; i++)
-    {
-        TrueMoves[i] = board.TrueLegalMoves[i];
-    }
+    memcpy(TrueMoves, board.TrueLegalMoves, sizeof(Move) * board.TrueLegalMovesSize);
     u64 nodes = 0ULL;
     for (int i = 0; i < trueSize; i++)
     {
@@ -193,13 +188,6 @@ void MoveGenSpeedTest() {
     std::cout << "\nTotal time elapsed: " << totalDuration.count() << " microseconds";
 }
 
-int GenerateRandom(int lowerBound, int upperBound) {
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::uniform_int_distribution<int> distribution(lowerBound, upperBound);
-    return distribution(mt);
-}
-
 std::string PlayGameAIAI(std::string startPosition) {
     Chessboard board;
     int moveIndex;
@@ -208,12 +196,14 @@ std::string PlayGameAIAI(std::string startPosition) {
     std::string gamePGN;
     board.LoadPosition(startPosition);
     auto start = std::chrono::high_resolution_clock::now();
-    while (true)
+    int index = 5;
+    while (index != 0)
     {
         board.FindAllMoves();
         if (board.CheckGameState() != 0)
             break;
-        move = Search::SearchPosition(board, 3, INT32_MIN, INT32_MAX, board.moveSide).move;
+        move = Search::SearchPosition(board, index, INT32_MIN, INT32_MAX, board.moveSide).move;
+        //index--;
         movePGN = move.GetLongMoveString();
         gamePGN += movePGN + " ";
         board.MakeMove(move);
@@ -222,6 +212,69 @@ std::string PlayGameAIAI(std::string startPosition) {
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     std::cout << duration.count() << " microseconds\n";
     return gamePGN;
+}
+
+std::string PlayGameVsAI(std::string startPosition) {
+    Chessboard board;
+    int moveIndex;
+    int playerMoveIndex = -1;
+    Move move;
+    std::string PlayerMove = "\0\0\0\0\0";
+    std::string movePGN;
+    std::string gamePGN;
+    board.LoadPosition(startPosition);
+    auto start = std::chrono::high_resolution_clock::now();
+    while (true)
+    {
+        //Player Moves
+        playerMoveIndex = -1;
+        board.FindAllMoves();
+        //std::cout << board.GenerateBoardDisplay();
+        if (board.CheckGameState() != 0)
+            break;
+        while (playerMoveIndex == -1)
+        {
+            std::cin >> PlayerMove;
+            playerMoveIndex = board.FindMoveIndexFromPGN(PlayerMove);
+            if (playerMoveIndex == -1)
+            {
+                std::cout << "Invalid Move Try Again\n";
+            }
+        }
+        gamePGN += PlayerMove + " ";
+        board.MakeMove(board.TrueLegalMoves[playerMoveIndex]);
+        //AI Moves
+        board.FindAllMoves();
+        if (board.CheckGameState() != 0)
+            break;
+        move = Search::SearchPosition(board, 5, INT32_MIN, INT32_MAX, board.moveSide).move;
+        movePGN = move.GetLongMoveString();
+        std::cout << movePGN << "\n";
+        gamePGN += movePGN + " ";
+        board.MakeMove(move);
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << duration.count() << " microseconds\n";
+    return gamePGN;
+}
+
+void SearchCheckmateFindTest() {
+    auto start = std::chrono::high_resolution_clock::now();
+    std::cout << "Expected Moves Per Position 5" << "\n";
+    std::cout << PlayGameAIAI("r1b1kb1r/pppp1ppp/5q2/4n3/3KP3/2N3PN/PPP4P/R1BQ1B1R b kq - 0 1") << "\n";
+    std::cout << PlayGameAIAI("r3k2r/ppp2Npp/1b5n/4p2b/2B1P2q/BQP2P2/P5PP/RN5K w kq - 1 0") << "\n";
+    std::cout << PlayGameAIAI("r1b3kr/ppp1Bp1p/1b6/n2P4/2p3q1/2Q2N2/P4PPP/RN2R1K1 w - - 1 0") << "\n";
+    std::cout << PlayGameAIAI("r2n1rk1/1ppb2pp/1p1p4/3Ppq1n/2B3P1/2P4P/PP1N1P1K/R2Q1RN1 b - - 0 1") << "\n";
+    std::cout << PlayGameAIAI("3q1r1k/2p4p/1p1pBrp1/p2Pp3/2PnP3/5PP1/PP1Q2K1/5R1R w - - 1 0") << "\n";
+    std::cout << PlayGameAIAI("6k1/ppp2ppp/8/2n2K1P/2P2P1P/2Bpr3/PP4r1/4RR2 b - - 0 1") << "\n";
+    std::cout << PlayGameAIAI("rn3rk1/p5pp/2p5/3Ppb2/2q5/1Q6/PPPB2PP/R3K1NR b - - 0 1") << "\n";
+    std::cout << PlayGameAIAI("N1bk4/pp1p1Qpp/8/2b5/3n3q/8/PPP2RPP/RNB1rBK1 b - - 0 1") << "\n";
+    std::cout << PlayGameAIAI("8/2p3N1/6p1/5PB1/pp2Rn2/7k/P1p2K1P/3r4 w - - 1 0") << "\n";
+    std::cout << PlayGameAIAI("r1b1k1nr/p2p1ppp/n2B4/1p1NPN1P/6P1/3P1Q2/P1P1K3/q5b1 w - - 1 0") << "\n";
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << duration.count() << " microseconds\n";
 }
 
 std::string PlayGame(std::string startPosition) {
@@ -265,31 +318,36 @@ void MainLoop() {
         std::cout << "2. Play game AI vs AI (Prints Game PGN To Console Which Can Be Inputted At https://lichess.org/paste To View The Game)\n";
         std::cout << "3. Play game using User Input (Format (Piece Type), (StartSquare), (TargetSquare), (Promotion Type)) Ex. e2e4 (Pawn E4) Ng1f3 (Knight F3), Ke1g1 (King Castles King Side) \n";
         std::cout << "4. Evaluate Current Position\n";
-        std::cout << "5. Quit\n";
+        std::cout << "5. Position Search Test\n";
+        std::cout << "6. Play Game Vs AI\n";
+        std::cout << "7. Quit\n";
         std::cin >> gameMode;
         board.LoadPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0");
         if (gameMode == "1")
         {
             MoveGenSpeedTest();
-            break;
         }
         else if (gameMode == "2") {
-            std::cout << PlayGameAIAI("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0");
-            break;
+            std::cout << PlayGameAIAI("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0") << "\n";
         }
         else if (gameMode == "3") {
-            std::cout << PlayGame("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0");
-            break;
+            std::cout << PlayGame("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0") << "\n";
         }
         else if (gameMode == "4")
         {
             board.FindAllMoves();
-            Eval eval = Search::SearchPosition(board, 7, INT32_MIN, INT32_MAX, board.moveSide);
+            Eval eval = Search::SearchPosition(board, 2, INT32_MIN, INT32_MAX, board.moveSide);
             std::cout << eval.move.GetLongMoveString();
             std::cout << "\n" << eval.eval << "\n";
-            break;
         }
         else if (gameMode == "5") {
+            SearchCheckmateFindTest();
+        }
+        else if (gameMode == "6") {
+            std::cout << PlayGameVsAI("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0") << "\n";
+        }
+        else if (gameMode == "7")
+        {
             break;
         }
         else
